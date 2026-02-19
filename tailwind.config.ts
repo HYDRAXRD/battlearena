@@ -57,6 +57,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        game: {
+          dark: '#0a0a1a',
+          purple: '#8b5cf6',
+          teal: '#14b8a6',
+          cyan: '#06d6a0',
+        },
+      },
+      fontFamily: {
+        pixel: ['"Press Start 2P"', 'cursive'],
       },
       borderRadius: {
         lg: "var(--radius)",
