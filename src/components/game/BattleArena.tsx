@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import PixelCanvas from './PixelCanvas';
 import { HydraStats, DamagePopup } from '@/game/types';
-import { ENEMIES, ABILITIES, CHARACTER_ART } from '@/game/constants';
+import { ENEMIES, ABILITIES } from '@/game/constants';
 import hydraBattle from '@/assets/hydra-battle.png';
+import dogeEnemy from '@/assets/doge-enemy.png';
+import pepeEnemy from '@/assets/pepe-enemy.png';
 
 interface Props {
   hydra: HydraStats;
@@ -12,6 +13,12 @@ interface Props {
   onWin: (tokens: number, score: number) => void;
   onLose: () => void;
 }
+
+// Map enemy id to custom image (if available)
+const ENEMY_IMAGES: Record<string, string> = {
+  doge: dogeEnemy,
+  pepe: pepeEnemy,
+};
 
 const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, onWin, onLose }) => {
   const enemy = ENEMIES[battleIndex];
@@ -114,6 +121,8 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const epPct = (hydraEnergy / hydra.maxEnergy) * 100;
   const eHpPct = (enemyHp / enemy.maxHp) * 100;
 
+  const enemyImg = ENEMY_IMAGES[enemy.id];
+
   return (
     <div className="relative z-10 flex flex-col min-h-screen">
       <div className="text-center pt-4 font-pixel">
@@ -122,7 +131,8 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         <div className="text-[7px] text-muted-foreground">{enemy.subtitle}</div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center relative px-4">
+      {/* Battle area — fixed height so both sides share same baseline */}
+      <div className="flex-1 flex items-end justify-center relative px-4 pb-4">
         <AnimatePresence>
           {popups.map(p => (
             <motion.div key={p.id}
@@ -135,35 +145,70 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           ))}
         </AnimatePresence>
 
-        {/* Hydra */}
+        {/* Hydra side */}
         <div className="flex flex-col items-center w-2/5">
+          {/* Stats bars above character */}
           <div className="mb-2 w-full max-w-[160px]">
-            <div className="flex justify-between font-pixel text-[7px] text-white mb-1"><span>HYDRA</span><span>{Math.max(0, hydraHp)}/{hydra.maxHp}</span></div>
+            <div className="flex justify-between font-pixel text-[7px] text-white mb-1">
+              <span>HYDRA</span><span>{Math.max(0, hydraHp)}/{hydra.maxHp}</span>
+            </div>
             <div className="w-full h-3 bg-gray-800 rounded-sm overflow-hidden border border-green-500/30">
-              <motion.div className="h-full bg-gradient-to-r from-green-600 to-green-400" animate={{ width: `${hpPct}%` }} transition={{ duration: 0.3 }} />
+              <motion.div className="h-full bg-gradient-to-r from-green-600 to-green-400"
+                animate={{ width: `${hpPct}%` }} transition={{ duration: 0.3 }} />
             </div>
             <div className="w-full h-2 bg-gray-800 rounded-sm overflow-hidden mt-1 border border-blue-500/30">
-              <motion.div className="h-full bg-gradient-to-r from-blue-600 to-blue-400" animate={{ width: `${epPct}%` }} transition={{ duration: 0.3 }} />
+              <motion.div className="h-full bg-gradient-to-r from-blue-600 to-blue-400"
+                animate={{ width: `${epPct}%` }} transition={{ duration: 0.3 }} />
             </div>
             <div className="font-pixel text-[6px] text-blue-400 mt-0.5">EP {Math.floor(hydraEnergy)}/{hydra.maxEnergy}</div>
           </div>
-          <motion.div animate={shakeHydra ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{ duration: 0.2 }}>
-            <img src={hydraBattle} alt="Hydra" className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-[0_0_20px_rgba(29,111,232,0.6)]" style={{ transform: 'scaleX(-1)' }} />
+
+          {/* Hydra character — fixed height container so feet align */}
+          <motion.div
+            className="flex items-end justify-center"
+            style={{ height: 160 }}
+            animate={shakeHydra ? { x: [-5, 5, -5, 5, 0] } : {}}
+            transition={{ duration: 0.2 }}>
+            <img
+              src={hydraBattle}
+              alt="Hydra"
+              className="object-contain drop-shadow-[0_0_20px_rgba(29,111,232,0.6)]"
+              style={{ maxHeight: 160, width: 'auto', transform: 'scaleX(-1)' }}
+            />
           </motion.div>
         </div>
 
-        <div className="font-pixel text-game-purple text-lg mx-2 animate-pulse">VS</div>
+        <div className="font-pixel text-game-purple text-lg mx-2 mb-16 animate-pulse self-center">VS</div>
 
-        {/* Enemy */}
+        {/* Enemy side */}
         <div className="flex flex-col items-center w-2/5">
+          {/* Stats bars above character */}
           <div className="mb-2 w-full max-w-[160px]">
-            <div className="flex justify-between font-pixel text-[7px] text-white mb-1"><span>{enemy.name.toUpperCase()}</span><span>{Math.max(0, enemyHp)}/{enemy.maxHp}</span></div>
+            <div className="flex justify-between font-pixel text-[7px] text-white mb-1">
+              <span>{enemy.name.toUpperCase()}</span><span>{Math.max(0, enemyHp)}/{enemy.maxHp}</span>
+            </div>
             <div className="w-full h-3 bg-gray-800 rounded-sm overflow-hidden border border-red-500/30">
-              <motion.div className="h-full bg-gradient-to-r from-red-600 to-red-400" animate={{ width: `${eHpPct}%` }} transition={{ duration: 0.3 }} />
+              <motion.div className="h-full bg-gradient-to-r from-red-600 to-red-400"
+                animate={{ width: `${eHpPct}%` }} transition={{ duration: 0.3 }} />
             </div>
           </div>
-          <motion.div animate={shakeEnemy ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{ duration: 0.2 }}>
-            <PixelCanvas art={CHARACTER_ART[enemy.id]} pixelSize={6} />
+
+          {/* Enemy character — same fixed height container */}
+          <motion.div
+            className="flex items-end justify-center"
+            style={{ height: 160 }}
+            animate={shakeEnemy ? { x: [-5, 5, -5, 5, 0] } : {}}
+            transition={{ duration: 0.2 }}>
+            {enemyImg ? (
+              <img
+                src={enemyImg}
+                alt={enemy.name}
+                className="object-contain"
+                style={{ maxHeight: 160, width: 'auto' }}
+              />
+            ) : (
+              <div className="text-white font-pixel text-xs">{enemy.name}</div>
+            )}
           </motion.div>
         </div>
       </div>
@@ -171,7 +216,9 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       {/* Log */}
       <div className="px-4 mb-2">
         <div className="bg-black/60 rounded p-2 h-14 overflow-hidden border border-game-purple/20">
-          {log.slice(-3).map((m, i) => <div key={i} className="font-pixel text-[6px] text-gray-400 leading-relaxed">{m}</div>)}
+          {log.slice(-3).map((m, i) => (
+            <div key={i} className="font-pixel text-[6px] text-gray-400 leading-relaxed">{m}</div>
+          ))}
         </div>
       </div>
 
@@ -185,7 +232,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
               <button key={ab.id} onClick={() => useAbility(i)} disabled={disabled}
                 className={`relative font-pixel text-[6px] md:text-[7px] p-3 rounded border-2 transition-all ${disabled
                   ? 'bg-gray-800/50 border-gray-700 text-gray-600 cursor-not-allowed'
-                  : 'bg-background border-game-purple/50 text-white hover:border-game-purple hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] active:scale-95'}`}>
+                  : 'bg-background border-game-purple/50 text-white hover:border-game-purple hover:shadow-[0_0_15px_rgba(29,111,232,0.3)] active:scale-95'}`}>
                 <div className="text-lg mb-1">{ab.icon}</div>
                 <div className="leading-tight">{ab.name}</div>
                 <div className="text-[5px] text-game-teal mt-1">{ab.energyCost} EP</div>
