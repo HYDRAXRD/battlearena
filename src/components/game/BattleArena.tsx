@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PixelCanvas from './PixelCanvas';
 import { HydraStats, DamagePopup } from '@/game/types';
-import { ENEMIES, ABILITIES, CHARACTER_ART, HYDRA_ART } from '@/game/constants';
+import { ENEMIES, ABILITIES, CHARACTER_ART } from '@/game/constants';
+import hydraBattle from '@/assets/hydra-battle.png';
 
 interface Props {
   hydra: HydraStats;
@@ -147,7 +148,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
             <div className="font-pixel text-[6px] text-blue-400 mt-0.5">EP {Math.floor(hydraEnergy)}/{hydra.maxEnergy}</div>
           </div>
           <motion.div animate={shakeHydra ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{ duration: 0.2 }}>
-            <PixelCanvas art={HYDRA_ART} pixelSize={6} />
+            <img src={hydraBattle} alt="Hydra" className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-[0_0_20px_rgba(29,111,232,0.6)]" />
           </motion.div>
         </div>
 
