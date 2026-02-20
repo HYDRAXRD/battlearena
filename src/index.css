@@ -28,12 +28,12 @@
     --radius: 0.5rem;
     --sidebar-background: 240 33% 6%;
     --sidebar-foreground: 240 5% 90%;
-    --sidebar-primary: 263 70% 58%;
+    --sidebar-primary: 218 80% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 20% 15%;
     --sidebar-accent-foreground: 240 5% 90%;
-    --sidebar-border: 263 30% 22%;
-    --sidebar-ring: 263 70% 58%;
+    --sidebar-border: 218 40% 25%;
+    --sidebar-ring: 218 80% 52%;
   }
 }
 
