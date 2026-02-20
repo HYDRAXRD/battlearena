@@ -4,6 +4,7 @@ import { useGameState } from '@/game/useGameState';
 import { ENEMIES } from '@/game/constants';
 import { GameScreen } from '@/game/types';
 import StarryBackground from '@/components/game/StarryBackground';
+import NameEntry from '@/components/game/NameEntry';
 import StartScreen from '@/components/game/StartScreen';
 import BattleArena from '@/components/game/BattleArena';
 import Shop from '@/components/game/Shop';
@@ -12,29 +13,45 @@ import Leaderboard from '@/components/game/Leaderboard';
 const Index = () => {
   const { state, setScreen, startGame, winBattle, nextBattle, purchase, resetGame } = useGameState();
   const [shopReturn, setShopReturn] = useState<GameScreen>('start');
+  const [playerName, setPlayerName] = useState('');
+  const [hasName, setHasName] = useState(false);
+
   const cdReduction = state.purchases['cooldown'] || 0;
   const currentEnemy = ENEMIES[Math.min(state.currentBattle, ENEMIES.length - 1)];
 
   const goShop = (from: GameScreen) => { setShopReturn(from); setScreen('shop'); };
 
+  const handleNameConfirm = (name: string) => {
+    setPlayerName(name);
+    setHasName(true);
+  };
+
   return (
     <div className="min-h-screen overflow-hidden relative">
       <StarryBackground />
       <AnimatePresence mode="wait">
-        {state.screen === 'start' && (
+
+        {/* Name Entry — shown first before start screen */}
+        {!hasName && (
+          <motion.div key="name-entry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <NameEntry onConfirm={handleNameConfirm} />
+          </motion.div>
+        )}
+
+        {hasName && state.screen === 'start' && (
           <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <StartScreen onStart={startGame} onShop={() => goShop('start')} onLeaderboard={() => setScreen('leaderboard')} />
           </motion.div>
         )}
 
-        {state.screen === 'battle' && (
+        {hasName && state.screen === 'battle' && (
           <motion.div key={`battle-${state.currentBattle}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <BattleArena hydra={state.hydra} battleIndex={state.currentBattle} cooldownReduction={cdReduction}
               onWin={(t, s) => winBattle(t, s)} onLose={() => setScreen('defeat')} />
           </motion.div>
         )}
 
-        {state.screen === 'victory' && (
+        {hasName && state.screen === 'victory' && (
           <motion.div key="victory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-center">
@@ -43,7 +60,7 @@ const Index = () => {
               <p className="font-pixel text-[10px] text-yellow-400 mb-6">+{currentEnemy.tokenReward} Tokens!</p>
               <div className="flex flex-col gap-3 w-48 mx-auto">
                 <button onClick={nextBattle}
-                  className="font-pixel text-[8px] py-3 bg-game-purple hover:bg-game-purple/80 text-white rounded border-2 border-game-purple/50 shadow-[0_0_15px_rgba(139,92,246,0.4)] transition-all">
+                  className="font-pixel text-[8px] py-3 bg-game-purple hover:bg-game-purple/80 text-white rounded border-2 border-game-purple/50 shadow-[0_0_15px_rgba(29,111,232,0.4)] transition-all">
                   {state.currentBattle >= 3 ? '🏆 VIEW RESULTS' : '▶ NEXT BATTLE'}
                 </button>
                 <button onClick={() => goShop('victory')}
@@ -55,11 +72,11 @@ const Index = () => {
           </motion.div>
         )}
 
-        {state.screen === 'defeat' && (
+        {hasName && state.screen === 'defeat' && (
           <motion.div key="defeat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
             <div className="text-6xl mb-4">💀</div>
-            <h1 className="font-pixel text-xl text-red-400 mb-2 font-pixel">DEFEATED!</h1>
+            <h1 className="font-pixel text-xl text-red-400 mb-2">DEFEATED!</h1>
             <p className="font-pixel text-[10px] text-muted-foreground mb-6">Your Hydra has fallen...</p>
             <button onClick={resetGame}
               className="font-pixel text-[8px] py-3 px-6 bg-game-purple hover:bg-game-purple/80 text-white rounded border-2 border-game-purple/50 transition-all">
@@ -68,18 +85,19 @@ const Index = () => {
           </motion.div>
         )}
 
-        {state.screen === 'shop' && (
+        {hasName && state.screen === 'shop' && (
           <motion.div key="shop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Shop tokens={state.tokens} purchases={state.purchases} hydra={state.hydra}
               onPurchase={purchase} onBack={() => setScreen(shopReturn)} />
           </motion.div>
         )}
 
-        {state.screen === 'leaderboard' && (
+        {hasName && state.screen === 'leaderboard' && (
           <motion.div key="leaderboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <Leaderboard playerScore={state.totalScore} onBack={() => setScreen('start')} />
+            <Leaderboard playerName={playerName} playerScore={state.totalScore} onBack={() => setScreen('start')} />
           </motion.div>
         )}
+
       </AnimatePresence>
     </div>
   );
