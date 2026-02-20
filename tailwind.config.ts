@@ -59,7 +59,7 @@ export default {
         },
         game: {
           dark: '#0a0a1a',
-          purple: '#8b5cf6',
+          purple: '#1d6fe8',
           teal: '#14b8a6',
           cyan: '#06d6a0',
         },
