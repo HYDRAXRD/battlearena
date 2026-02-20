@@ -9,6 +9,7 @@ import StartScreen from '@/components/game/StartScreen';
 import BattleArena from '@/components/game/BattleArena';
 import Shop from '@/components/game/Shop';
 import Leaderboard from '@/components/game/Leaderboard';
+import hydrToken from '@/assets/hydr-token.png';
 
 const Index = () => {
   const { state, setScreen, startGame, winBattle, nextBattle, purchase, resetGame } = useGameState();
@@ -57,7 +58,9 @@ const Index = () => {
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-center">
               <div className="text-6xl mb-4">🎉</div>
               <h1 className="font-pixel text-xl text-game-teal mb-2">VICTORY!</h1>
-              <p className="font-pixel text-[10px] text-yellow-400 mb-6">+{currentEnemy.tokenReward} Tokens!</p>
+              <p className="font-pixel text-[10px] text-yellow-400 mb-6 flex items-center justify-center gap-2">
+                +{currentEnemy.tokenReward} <img src={hydrToken} alt="HYDR" style={{ width: 16, height: 16, imageRendering: 'pixelated', display: 'inline-block' }} /> HYDR
+              </p>
               <div className="flex flex-col gap-3 w-48 mx-auto">
                 <button onClick={nextBattle}
                   className="font-pixel text-[8px] py-3 bg-game-purple hover:bg-game-purple/80 text-white rounded border-2 border-game-purple/50 shadow-[0_0_15px_rgba(29,111,232,0.4)] transition-all">
