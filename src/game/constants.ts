@@ -128,15 +128,4 @@ export const CHARACTER_ART: Record<string, string[]> = {
   ],
 };
 
-export const LEADERBOARD_DATA = [
-  { name: 'CryptoKing420', score: 2500 },
-  { name: 'DiamondHands', score: 2200 },
-  { name: 'MoonBoi', score: 1800 },
-  { name: 'SatoshiSimp', score: 1500 },
-  { name: 'RugPullRick', score: 1200 },
-  { name: 'WhaleWatcher', score: 1000 },
-  { name: 'GasFeeFred', score: 800 },
-  { name: 'TokenTina', score: 600 },
-  { name: 'NFTNancy', score: 400 },
-  { name: 'DeFiDave', score: 200 },
-];
+export const LEADERBOARD_DATA: { name: string; score: number }[] = [];

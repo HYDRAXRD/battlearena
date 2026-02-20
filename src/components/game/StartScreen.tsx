@@ -14,10 +14,10 @@ const StartScreen: React.FC<Props> = ({ onStart, onShop, onLeaderboard }) => (
       <img src={hydraHeads} alt="Hydra" className="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_0_30px_rgba(29,111,232,0.7)]" style={{ imageRendering: 'pixelated' }} />
     </motion.div>
     <motion.h1 className="font-pixel text-2xl md:text-4xl text-center mb-1" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-      <span className="text-game-purple">HYDRA'S</span>
+      <span className="text-game-purple">HYDRA</span>
     </motion.h1>
     <motion.h2 className="font-pixel text-lg md:text-2xl text-center mb-10" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-      <span className="text-game-teal">CRYPTO CLASH</span>
+      <span className="text-game-teal">BATTLE ARENA</span>
     </motion.h2>
     <motion.div className="flex flex-col gap-4 w-full max-w-xs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
       <button onClick={onStart}
