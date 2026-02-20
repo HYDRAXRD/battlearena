@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { SHOP_ITEMS } from '@/game/constants';
 import { HydraStats } from '@/game/types';
+import hydrToken from '@/assets/hydr-token.png';
 
 interface Props {
   tokens: number;
@@ -11,11 +12,15 @@ interface Props {
   onBack: () => void;
 }
 
+const HydrToken = ({ size = 14 }: { size?: number }) => (
+  <img src={hydrToken} alt="HYDR" style={{ width: size, height: size, display: 'inline-block', verticalAlign: 'middle', imageRendering: 'pixelated' }} />
+);
+
 const Shop: React.FC<Props> = ({ tokens, purchases, onPurchase, onBack }) => (
   <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
     <div className="flex justify-between items-center mb-6">
       <button onClick={onBack} className="font-pixel text-[10px] text-game-teal hover:text-game-teal/80">← BACK</button>
-      <div className="font-pixel text-[10px] text-yellow-400">🪙 {tokens}</div>
+      <div className="font-pixel text-[10px] text-yellow-400 flex items-center gap-1"><HydrToken size={16} /> {tokens} HYDR</div>
     </div>
     <h1 className="font-pixel text-lg text-center text-game-purple mb-6">🛒 SHOP</h1>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto w-full">
@@ -29,12 +34,12 @@ const Shop: React.FC<Props> = ({ tokens, purchases, onPurchase, onBack }) => (
             <div className="font-pixel text-[7px] text-white mb-1">{item.name}</div>
             <div className="font-pixel text-[5px] text-muted-foreground mb-2">{item.description}</div>
             <div className="flex justify-between items-center">
-              <span className="font-pixel text-[6px] text-yellow-400">🪙 {item.cost}</span>
+              <span className="font-pixel text-[6px] text-yellow-400 flex items-center gap-1"><HydrToken size={12} /> {item.cost}</span>
               <span className="font-pixel text-[5px] text-gray-500">{count}/{item.maxPurchases}</span>
             </div>
             <button onClick={() => onPurchase(item.id)} disabled={maxed || poor}
               className={`w-full mt-2 font-pixel text-[6px] py-2 rounded transition-all ${maxed || poor ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-game-purple hover:bg-game-purple/80 text-white active:scale-95'}`}>
-              {maxed ? 'MAXED' : poor ? 'NEED MORE' : 'BUY'}
+              {maxed ? 'MAXED' : poor ? 'NEED MORE HYDR' : 'BUY'}
             </button>
           </motion.div>
         );

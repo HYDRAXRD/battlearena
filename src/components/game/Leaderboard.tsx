@@ -15,7 +15,7 @@ const Leaderboard: React.FC<Props> = ({ playerName, playerScore, onBack }) => {
       <button onClick={onBack} className="font-pixel text-[10px] text-game-teal hover:text-game-teal/80 self-start mb-6">← BACK</button>
       <h1 className="font-pixel text-lg text-center text-game-purple mb-6">🏆 LEADERBOARD</h1>
       <div className="max-w-md mx-auto w-full">
-        {playerScore > 0 ? (
+        {playerName ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             className="flex items-center justify-between py-4 px-4 mb-4 rounded border-2 border-game-teal bg-game-teal/10 shadow-[0_0_20px_rgba(20,184,166,0.2)]"
@@ -24,7 +24,9 @@ const Leaderboard: React.FC<Props> = ({ playerName, playerScore, onBack }) => {
               <span className="font-pixel text-lg">{trophies[0]}</span>
               <div>
                 <div className="font-pixel text-[9px] text-game-teal">{playerName}</div>
-                <div className="font-pixel text-[6px] text-muted-foreground mt-1">YOUR SCORE</div>
+                <div className="font-pixel text-[6px] text-muted-foreground mt-1">
+                  {playerScore > 0 ? 'YOUR SCORE' : 'NO BATTLES WON YET'}
+                </div>
               </div>
             </div>
             <span className="font-pixel text-sm text-yellow-400">{playerScore}</span>
@@ -36,7 +38,7 @@ const Leaderboard: React.FC<Props> = ({ playerName, playerScore, onBack }) => {
           >
             <div className="text-4xl mb-4">🎮</div>
             <p className="font-pixel text-[8px] text-muted-foreground">No scores yet.</p>
-            <p className="font-pixel text-[8px] text-muted-foreground mt-2">Complete a battle to see your score here!</p>
+            <p className="font-pixel text-[8px] text-muted-foreground mt-2">Register your name and play to see your score!</p>
           </motion.div>
         )}
       </div>
