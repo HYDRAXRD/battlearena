@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PixelCanvas from './PixelCanvas';
 import { HydraStats, DamagePopup } from '@/game/types';
-import { ENEMIES, ABILITIES, CHARACTER_ART, HYDRA_ART } from '@/game/constants';
+import { ENEMIES, ABILITIES, CHARACTER_ART } from '@/game/constants';
+import hydraBattle from '@/assets/hydra-battle.png';
 
 interface Props {
   hydra: HydraStats;
