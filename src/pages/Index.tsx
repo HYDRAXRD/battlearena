@@ -9,6 +9,7 @@ import StartScreen from '@/components/game/StartScreen';
 import BattleArena from '@/components/game/BattleArena';
 import Shop from '@/components/game/Shop';
 import Leaderboard from '@/components/game/Leaderboard';
+import RadixConnectButton from '@/components/game/RadixConnectButton';
 import hydrToken from '@/assets/hydr-token.png';
 
 const Index = () => {
@@ -30,28 +31,30 @@ const Index = () => {
   return (
     <div className="min-h-screen overflow-hidden relative">
       <StarryBackground />
-      <AnimatePresence mode="wait">
 
+      {/* Radix Wallet Connect Button - always visible in top-right corner */}
+      <div className="fixed top-4 right-4 z-50">
+        <RadixConnectButton />
+      </div>
+
+      <AnimatePresence mode="wait">
         {/* Name Entry — shown first before start screen */}
         {!hasName && (
           <motion.div key="name-entry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <NameEntry onConfirm={handleNameConfirm} />
           </motion.div>
         )}
-
         {hasName && state.screen === 'start' && (
           <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <StartScreen onStart={startGame} onShop={() => goShop('start')} onLeaderboard={() => setScreen('leaderboard')} />
           </motion.div>
         )}
-
         {hasName && state.screen === 'battle' && (
           <motion.div key={`battle-${state.currentBattle}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <BattleArena hydra={state.hydra} battleIndex={state.currentBattle} cooldownReduction={cdReduction}
               onWin={(t, s) => winBattle(t, s)} onLose={() => setScreen('defeat')} />
           </motion.div>
         )}
-
         {hasName && state.screen === 'victory' && (
           <motion.div key="victory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
@@ -74,7 +77,6 @@ const Index = () => {
             </motion.div>
           </motion.div>
         )}
-
         {hasName && state.screen === 'defeat' && (
           <motion.div key="defeat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
@@ -87,23 +89,19 @@ const Index = () => {
             </button>
           </motion.div>
         )}
-
         {hasName && state.screen === 'shop' && (
           <motion.div key="shop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Shop tokens={state.tokens} purchases={state.purchases} hydra={state.hydra}
               onPurchase={purchase} onBack={() => setScreen(shopReturn)} />
           </motion.div>
         )}
-
         {hasName && state.screen === 'leaderboard' && (
           <motion.div key="leaderboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Leaderboard playerName={playerName} playerScore={state.totalScore} onBack={() => setScreen('start')} />
           </motion.div>
         )}
-
       </AnimatePresence>
     </div>
   );
 };
-
 export default Index;
