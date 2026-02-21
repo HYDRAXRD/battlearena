@@ -87,7 +87,6 @@ const Index = () => {
   const handlePurchase = async (id: string) => {
     const item = SHOP_ITEMS.find(i => i.id === id);
     if (!item) return;
-
     if (connected && accounts.length > 0) {
       try {
         const manifest = `CALL_METHOD
@@ -120,10 +119,10 @@ CALL_METHOD
   };
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
+    <div className="relative min-h-screen bg-background overflow-hidden">
       <StarryBackground />
-
-      <div className="absolute top-4 right-4 z-50">
+      <MuteButton muted={muted} onToggle={toggleMute} />
+      <div className="fixed top-4 left-4 z-50">
         <RadixConnectButton />
       </div>
 
@@ -135,6 +134,8 @@ CALL_METHOD
         {hasName && state.screen === 'start' && (
           <StartScreen
             key="start"
+            playerName={playerName}
+            tokens={state.tokens}
             onStart={startGame}
             onShop={() => goShop('start')}
             onLeaderboard={() => setScreen('leaderboard')}
@@ -143,7 +144,7 @@ CALL_METHOD
 
         {hasName && state.screen === 'battle' && (
           <BattleArena
-            key={`battle-${state.currentBattle}`}
+            key={state.currentBattle}
             hydra={state.hydra}
             battleIndex={state.currentBattle}
             cooldownReduction={cdReduction}
@@ -158,28 +159,33 @@ CALL_METHOD
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4"
+            className="flex flex-col items-center justify-center min-h-screen gap-6 px-4"
           >
-            <div className="text-6xl mb-4">🎉</div>
-            <h1 className="font-pixel text-2xl text-game-teal mb-2">VICTORY!</h1>
-            <p className="font-pixel text-[10px] text-gray-400 mb-2">Enemy Defeated!</p>
-            <div className="font-pixel text-[10px] text-yellow-400 flex items-center gap-1 mb-6">
-              +{currentEnemy.tokenReward} <HydrToken size={12} />
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 1 }}
+              className="text-6xl"
+            >
+              🎉
+            </motion.div>
+            <h1 className="font-pixel text-2xl text-game-teal text-center">VICTORY!</h1>
+            <p className="font-pixel text-[10px] text-white/60">Enemy Defeated!</p>
+            <div className="font-pixel text-sm text-yellow-400 flex items-center gap-1">
+              <HydrToken size={16} />
+              +{currentEnemy.tokenReward}
             </div>
-            <div className="flex flex-col gap-3 w-full max-w-xs">
-              <button
-                onClick={isLastBattle ? () => setScreen('leaderboard') : nextBattle}
-                className="font-pixel text-[10px] md:text-sm py-4 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
-              >
-                {isLastBattle ? '🏆 VIEW RESULTS' : '▶ NEXT BATTLE'}
-              </button>
-              <button
-                onClick={() => goShop('victory')}
-                className="font-pixel text-[8px] py-3 bg-transparent text-game-teal rounded border-2 border-game-teal/50 hover:bg-game-teal/10 transition-all"
-              >
-                🛒 SHOP
-              </button>
-            </div>
+            <button
+              onClick={isLastBattle ? () => setScreen('leaderboard') : nextBattle}
+              className="font-pixel text-[10px] md:text-sm py-4 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
+            >
+              {isLastBattle ? '🏆 VIEW RESULTS' : '▶ NEXT BATTLE'}
+            </button>
+            <button
+              onClick={() => goShop('victory')}
+              className="font-pixel text-[8px] py-3 bg-transparent text-game-teal rounded border-2 border-game-teal/50 hover:bg-game-teal/10 transition-all"
+            >
+              🛍 SHOP
+            </button>
           </motion.div>
         )}
 
@@ -188,12 +194,11 @@ CALL_METHOD
             key="defeat"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4"
+            className="flex flex-col items-center justify-center min-h-screen gap-6 px-4"
           >
-            <div className="text-6xl mb-4">💀</div>
-            <h1 className="font-pixel text-2xl text-red-500 mb-2">DEFEATED!</h1>
-            <p className="font-pixel text-[10px] text-gray-400 mb-8">Your Hydra has fallen in battle...</p>
+            <div className="text-6xl">💀</div>
+            <h1 className="font-pixel text-2xl text-red-500">DEFEATED!</h1>
+            <p className="font-pixel text-[8px] text-white/60">Your Hydra has fallen in battle...</p>
             <button
               onClick={() => { resetGame(); setScreen('start'); }}
               className="font-pixel text-[10px] py-4 px-8 bg-red-600 text-white rounded border-b-4 border-red-900 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
@@ -218,13 +223,12 @@ CALL_METHOD
           <Leaderboard
             key="leaderboard"
             playerName={playerName}
-            playerScore={state.totalScore}
+            totalScore={state.totalScore}
+            tokens={state.tokens}
             onBack={() => setScreen('start')}
           />
         )}
       </AnimatePresence>
-
-      <MuteButton muted={muted} onToggle={toggleMute} />
     </div>
   );
 };
