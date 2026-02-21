@@ -19,14 +19,20 @@ interface Props {
 const ENEMY_IMAGES: Record<string, string> = {
   doge: dogeEnemy,
   pepe: pepeEnemy,
+  hug: 'https://arweave.net/dYJSMjZlaoVSttypbD46PJumutb0Nb-x1Zz8e7PdqA0',
   wowo: 'https://arweave.net/uE40Q_zB_0M9i2M0V_80_x-3V5A-U0M-v-Z0-O-v-Z0',
   shiba: 'https://arweave.net/uE40Q_zB_0M9i2M0V_80_x-3V5A-U0M-v-Z0-O-v-Z0',
+  bonk: 'https://arweave.net/uE40Q_zB_0M9i2M0V_80_x-3V5A-U0M-v-Z0-O-v-Z0',
+  pengu: 'https://arweave.net/uE40Q_zB_0M9i2M0V_80_x-3V5A-U0M-v-Z0-O-v-Z0',
+  floki: 'https://arweave.net/uE40Q_zB_0M9i2M0V_80_x-3V5A-U0M-v-Z0-O-v-Z0',
+  dog: 'https://arweave.net/uE40Q_zB_0M9i2M0V_80_x-3V5A-U0M-v-Z0-O-v-Z0',
+  trump: 'https://arweave.net/uE40Q_zB_0M9i2M0V_80_x-3V5A-U0M-v-Z0-O-v-Z0',
 };
 
 const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, onWin, onLose }) => {
   const { playSfx } = useGameAudio();
   const enemy = ENEMIES[battleIndex];
-  
+
   const [hydraHp, setHydraHp] = useState(hydra.hp);
   const [hydraEnergy, setHydraEnergy] = useState(hydra.energy);
   const [enemyHp, setEnemyHp] = useState(enemy.maxHp);
@@ -35,7 +41,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const [shakeHydra, setShakeHydra] = useState(false);
   const [shakeEnemy, setShakeEnemy] = useState(false);
   const [log, setLog] = useState<string[]>(['Battle start!']);
-  
+
   const battleOverRef = useRef(false);
   const enemyHpRef = useRef(enemy.maxHp);
   const popupIdRef = useRef(0);
@@ -46,7 +52,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
     const id = popupIdRef.current++;
     const x = side === 'left' ? 15 + Math.random() * 15 : 65 + Math.random() * 15;
     const y = 25 + Math.random() * 20;
-    
+
     setPopups(p => [...p, { id, value, x, y, isHeal, isMiss }]);
     setTimeout(() => setPopups(p => p.filter(d => d.id !== id)), 900);
   }, []);
@@ -55,7 +61,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
 
   useEffect(() => {
     if (battleOverRef.current) return;
-    
+
     if (hydraHp <= 0) {
       battleOverRef.current = true;
       playSfx('lose');
@@ -70,7 +76,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   useEffect(() => {
     const iv = setInterval(() => {
       if (battleOverRef.current) return;
-      
+
       if (Math.random() < enemy.dodgeRate) {
         addPopup(0, 'right', false, true);
         addLog(`${enemy.name} dodged!`);
@@ -151,7 +157,6 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       setHydraHp(p => Math.min(hydra.maxHp, p + heal));
       addPopup(heal, 'left', true);
     }
-
     setCooldowns(p => ({ ...p, [ab.id]: ab.cooldownMs - (cooldownReduction * 500) }));
     addLog(`⚡ ${ab.name} for ${dmg}!`);
   };
@@ -159,7 +164,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const hpPct = (hydraHp / hydra.maxHp) * 100;
   const epPct = (hydraEnergy / hydra.maxEnergy) * 100;
   const eHpPct = (enemyHp / enemy.maxHp) * 100;
-  
+
   const enemyImg = ENEMY_IMAGES[enemy.id];
 
   return (
@@ -175,8 +180,6 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       </div>
 
       <div className="flex-1 relative border-2 border-game-purple/20 rounded-lg overflow-hidden bg-black/40 mb-4 md:mb-6">
-        <PixelCanvas />
-        
         <AnimatePresence>
           {popups.map(p => (
             <motion.div
@@ -197,7 +200,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         <div className="absolute inset-x-0 top-4 px-4 flex justify-between z-10">
           <div className="w-[40%]">
             <div className="h-2 md:h-3 bg-gray-800 rounded-full border border-gray-700 overflow-hidden shadow-inner">
-              <motion.div 
+              <motion.div
                 className="h-full bg-gradient-to-r from-game-red to-red-400"
                 initial={{ width: "100%" }}
                 animate={{ width: `${hpPct}%` }}
@@ -206,9 +209,8 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
             <div className="font-pixel text-[6px] md:text-[8px] text-white mt-1 drop-shadow-md">
               HYDRA {Math.max(0, hydraHp)}/{hydra.maxHp}
             </div>
-            
             <div className="h-1 md:h-1.5 bg-gray-800 rounded-full border border-gray-700 overflow-hidden mt-2">
-              <motion.div 
+              <motion.div
                 className="h-full bg-gradient-to-r from-game-purple to-purple-400"
                 initial={{ width: "0%" }}
                 animate={{ width: `${epPct}%` }}
@@ -221,7 +223,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
 
           <div className="w-[40%] text-right">
             <div className="h-2 md:h-3 bg-gray-800 rounded-full border border-gray-700 overflow-hidden shadow-inner">
-              <motion.div 
+              <motion.div
                 className="h-full bg-gradient-to-l from-game-red to-red-400"
                 initial={{ width: "100%" }}
                 animate={{ width: `${eHpPct}%` }}
@@ -234,34 +236,38 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         </div>
 
         <div className="absolute inset-0 flex items-center justify-around pointer-events-none">
-          <motion.div 
+          <motion.div
             animate={shakeHydra ? { x: [-5, 5, -5, 5, 0] } : {}}
             transition={{ duration: 0.2 }}
             className="w-24 md:w-48 h-24 md:h-48 relative"
           >
-            <img 
-              src={hydraBattle} 
-              alt="Hydra" 
+            <img
+              src={hydraBattle}
+              alt="Hydra"
               className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(29,111,232,0.4)]"
             />
           </motion.div>
 
           <div className="font-pixel text-xl md:text-3xl text-game-purple opacity-20 italic">VS</div>
 
-          <motion.div 
+          <motion.div
             animate={shakeEnemy ? { x: [-5, 5, -5, 5, 0] } : {}}
             transition={{ duration: 0.2 }}
             className="w-24 md:w-48 h-24 md:h-48 relative"
           >
             {enemyImg ? (
-              <img 
-                src={enemyImg} 
-                alt={enemy.name} 
+              <img
+                src={enemyImg}
+                alt={enemy.name}
                 className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(232,29,29,0.4)]"
               />
             ) : (
-              <div className="w-full h-full bg-game-red/20 rounded-full flex items-center justify-center border-4 border-game-red/40">
-                <span className="text-4xl">👾</span>
+              <div className="w-full h-full flex items-center justify-center">
+                <PixelCanvas 
+                  art={CHARACTER_ART[enemy.id] || CHARACTER_ART['doge']} 
+                  pixelSize={6}
+                  className="filter drop-shadow-[0_0_15px_rgba(232,29,29,0.4)]"
+                />
               </div>
             )}
           </motion.div>
@@ -270,7 +276,12 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         <div className="absolute bottom-4 inset-x-0 px-4 flex justify-center pointer-events-none">
           <div className="bg-black/60 border border-game-purple/30 p-2 rounded max-w-[80%] backdrop-blur-sm">
             {log.slice(-3).map((m, i) => (
-              <div key={i} className={`font-pixel text-[6px] md:text-[9px] mb-0.5 last:mb-0 ${i === 2 ? 'text-white' : 'text-white/40'}`}>
+              <div
+                key={i}
+                className={`font-pixel text-[6px] md:text-[9px] mb-0.5 last:mb-0 ${
+                  i === 2 ? 'text-white' : 'text-white/40'
+                }`}
+              >
                 {m}
               </div>
             ))}
@@ -282,33 +293,31 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         {ABILITIES.map((ab, i) => {
           const cd = cooldowns[ab.id] || 0;
           const disabled = cd > 0 || hydraEnergy < ab.energyCost || battleOverRef.current;
-          
           return (
             <button
               key={ab.id}
               onClick={() => useAbility(i)}
               disabled={disabled}
               className={`relative font-pixel text-[6px] md:text-[7px] p-3 rounded border-2 transition-all ${
-                disabled 
-                  ? 'bg-gray-800/50 border-gray-700 text-gray-600 cursor-not-allowed' 
+                disabled
+                  ? 'bg-gray-800/50 border-gray-700 text-gray-600 cursor-not-allowed'
                   : 'bg-background border-game-purple/50 text-white hover:border-game-purple hover:shadow-[0_0_15px_rgba(29,111,232,0.3)] active:scale-95'
               }`}
             >
               <div className="text-[10px] md:text-lg mb-1">{ab.icon}</div>
               <div className="font-bold truncate">{ab.name}</div>
               <div className="text-game-purple mt-1">{ab.energyCost} EP</div>
-              
               {cd > 0 && (
                 <div className="absolute inset-0 bg-black/80 flex items-center justify-center rounded overflow-hidden">
-                  <motion.div 
+                  <motion.div
                     className="absolute inset-0 bg-game-purple/20"
                     initial={{ height: "100%" }}
                     animate={{ height: "0%" }}
                     transition={{ duration: cd / 1000, ease: "linear" }}
                   />
-                  <span className="relative z-10 text-[8px] md:text-xs text-white">
+                  <div className="relative z-10 text-[8px] md:text-xs text-white">
                     {(cd / 1000).toFixed(1)}s
-                  </span>
+                  </div>
                 </div>
               )}
             </button>
