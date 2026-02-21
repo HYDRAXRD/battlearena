@@ -15,6 +15,7 @@ type Action =
   | { type: 'SET_SCREEN'; screen: GameScreen }
   | { type: 'START_GAME' }
   | { type: 'WIN_BATTLE'; tokens: number; score: number }
+  | { type: 'LOSE_GAME' }
   | { type: 'NEXT_BATTLE' }
   | { type: 'HEAL_FULL' }
   | { type: 'PURCHASE'; itemId: string; isFree?: boolean }
@@ -46,6 +47,11 @@ function reducer(state: GameState, action: Action): GameState {
         tokens: state.tokens + action.tokens,
         totalScore: state.totalScore + action.score,
         screen: 'victory',
+      };
+    case 'LOSE_GAME':
+      return {
+        ...state,
+        screen: 'defeat'
       };
     case 'NEXT_BATTLE': {
       const next = state.currentBattle + 1;
@@ -115,6 +121,7 @@ export function useGameState() {
     setScreen: useCallback((screen: GameScreen) => dispatch({ type: 'SET_SCREEN', screen }), []),
     startGame: useCallback(() => dispatch({ type: 'START_GAME' }), []),
     winBattle: useCallback((tokens: number, score: number) => dispatch({ type: 'WIN_BATTLE', tokens, score }), []),
+    loseGame: useCallback(() => dispatch({ type: 'LOSE_GAME' }), []),
     nextBattle: useCallback(() => {
       dispatch({ type: 'HEAL_FULL' });
       dispatch({ type: 'NEXT_BATTLE' });
