@@ -25,16 +25,17 @@ export const getRdt = (): ReturnType<typeof RadixDappToolkit> | null => rdtInsta
 
 export const initRdt = (): ReturnType<typeof RadixDappToolkit> => {
   if (rdtInstance) return rdtInstance;
+
   rdtInstance = RadixDappToolkit({
     dAppDefinitionAddress:
-      'account_tdx_2_12y7ue9sslrkpywpgqyu3nj8cut0uu5arpr7qyalz7y9j7j5q4ayhv6',
+      'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak',
     networkId: RadixNetwork.Stokenet,
     applicationName: 'BattleArena',
     applicationVersion: '1.0.0',
   });
 
   rdtInstance.walletApi.setRequestData(
-    DataRequestBuilder.accounts().exactly(1)
+    DataRequestBuilder.accounts().atLeast(1)
   );
 
   return rdtInstance;
@@ -44,30 +45,19 @@ export const useRadixWallet = () => {
   const [state, setState] = useState<RadixWalletState>({
     connected: false,
     accounts: [],
-    isLoading: false,
+    isLoading: true,
   });
 
   useEffect(() => {
     const rdt = initRdt();
+
     const subscription = rdt.walletApi.walletData$.subscribe((walletData) => {
-      if (walletData) {
-        setState({
-          connected: true,
-          accounts: walletData.accounts.map((acc) => ({
-            address: acc.address,
-            label: acc.label,
-            appearanceId: acc.appearanceId,
-          })),
-          personaLabel: walletData.persona?.label,
-          isLoading: false,
-        });
-      } else {
-        setState({
-          connected: false,
-          accounts: [],
-          isLoading: false,
-        });
-      }
+      setState({
+        connected: !!walletData.accounts.length,
+        accounts: walletData.accounts,
+        personaLabel: walletData.persona?.label,
+        isLoading: false,
+      });
     });
 
     return () => {
@@ -75,41 +65,15 @@ export const useRadixWallet = () => {
     };
   }, []);
 
-  const disconnect = useCallback(() => {
+  const connect = useCallback(async () => {
     const rdt = getRdt();
-    if (rdt) {
-      rdt.disconnect();
-      setState({
-        connected: false,
-        accounts: [],
-        isLoading: false,
-      });
-    }
-  }, []);
-
-  const getShortAddress = useCallback((address: string): string => {
-    if (!address) return '';
-    return `${address.slice(0, 10)}...${address.slice(-6)}`;
-  }, []);
-
-  const sendTransaction = useCallback(async (manifest: string, message?: string) => {
-    const rdt = getRdt();
-    if (!rdt) throw new Error('Radix Dapp Toolkit not initialized');
-
-    return rdt.walletApi.sendTransaction({
-      transactionManifest: manifest,
-      version: 1,
-      message,
-    });
+    if (!rdt) return;
+    // RDT handles the connection UI via the button component, 
+    // but we can trigger data requests if needed.
   }, []);
 
   return {
     ...state,
-    disconnect,
-    getShortAddress,
-    sendTransaction,
-    rdt: getRdt(),
+    connect,
   };
 };
-
-export default useRadixWallet;
