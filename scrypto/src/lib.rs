@@ -8,23 +8,18 @@ mod battle_arena {
     }
 
     impl BattleArena {
-        /// Instantiate a new BattleArena component with an initial supply of reward tokens.
-        pub fn instantiate_battle_arena() -> Global<BattleArena> {
-            // Create the reward token (HYDRA)
-            let reward_bucket: Bucket = ResourceBuilder::new_fungible(OwnerRole::None)
-                .divisibility(DIVISIBILITY_MAXIMUM)
-                .metadata(metadata! {
-                    init {
-                        "name" => "Hydra Reward Token", locked;
-                        "symbol" => "HYDRA", locked;
-                        "description" => "Official reward token for the Battle Arena", locked;
-                    }
-                })
-                .mint_initial_supply(1_000_000)
-                .into();
+        /// Instantiate a new BattleArena component using an existing reward token.
+        /// reward_tokens: A bucket containing the initial HYDRA tokens for rewards.
+        pub fn instantiate_battle_arena(reward_tokens: Bucket) -> Global<BattleArena> {
+            // Check if the resource passed is the correct HYDRA token (Stokenet resource address provided by user)
+            assert_eq!(
+                reward_tokens.resource_address(),
+                Address::from("resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r"),
+                "Invalid reward token resource address"
+            );
 
             Self {
-                reward_vault: Vault::with_bucket(reward_bucket),
+                reward_vault: Vault::with_bucket(reward_tokens),
             }
             .instantiate()
             .prepare_to_globalize(OwnerRole::None)
