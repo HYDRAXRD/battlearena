@@ -25,7 +25,6 @@ export const getRdt = (): ReturnType<typeof RadixDappToolkit> | null => rdtInsta
 
 export const initRdt = (): ReturnType<typeof RadixDappToolkit> => {
   if (rdtInstance) return rdtInstance;
-
   rdtInstance = RadixDappToolkit({
     dAppDefinitionAddress:
       'account_rdx12xdm5b6dlnmzz8hpc67f44kqjfhwfqfwhz5y0qm2sc4g2gpuwv2wkl',
@@ -33,11 +32,9 @@ export const initRdt = (): ReturnType<typeof RadixDappToolkit> => {
     applicationName: 'Battle Arena',
     applicationVersion: '1.0.0',
   });
-
   rdtInstance.walletApi.setRequestData(
     DataRequestBuilder.accounts().atLeast(1)
   );
-
   return rdtInstance;
 };
 
@@ -50,7 +47,6 @@ export const useRadixWallet = () => {
 
   useEffect(() => {
     const rdt = initRdt();
-
     const subscription = rdt.walletApi.walletData$.subscribe((walletData) => {
       if (walletData) {
         setState({
@@ -71,7 +67,6 @@ export const useRadixWallet = () => {
         });
       }
     });
-
     return () => {
       subscription.unsubscribe();
     };
@@ -94,10 +89,22 @@ export const useRadixWallet = () => {
     return `${address.slice(0, 10)}...${address.slice(-6)}`;
   }, []);
 
+  const sendTransaction = useCallback(async (manifest: string, message?: string) => {
+    const rdt = getRdt();
+    if (!rdt) throw new Error('Radix Dapp Toolkit not initialized');
+    
+    return rdt.walletApi.sendTransaction({
+      transactionManifest: manifest,
+      version: 1,
+      message,
+    });
+  }, []);
+
   return {
     ...state,
     disconnect,
     getShortAddress,
+    sendTransaction,
     rdt: getRdt(),
   };
 };
