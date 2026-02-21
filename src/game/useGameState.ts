@@ -16,9 +16,10 @@ type Action =
   | { type: 'START_GAME' }
   | { type: 'WIN_BATTLE'; tokens: number; score: number }
   | { type: 'LOSE_GAME' }
-  | { type: 'NEXT_BATTLE' }
+  | { type: 'NEXT__BATTLE' }
   | { type: 'HEAL_FULL' }
   | { type: 'PURCHASE'; itemId: string; isFree?: boolean }
+  | { type: 'SYNC_TOKENS'; tokens: number }
   | { type: 'RESET' };
 
 const initialState: GameState = {
@@ -49,23 +50,13 @@ function reducer(state: GameState, action: Action): GameState {
         screen: 'victory',
       };
     case 'LOSE_GAME':
-      return {
-        ...state,
-        screen: 'defeat'
-      };
-    case 'NEXT_BATTLE': {
+      return { ...state, screen: 'defeat' };
+    case 'NEXT__BATTLE': {
       const next = state.currentBattle + 1;
       if (next >= ENEMIES.length) {
-        return {
-          ...state,
-          screen: 'leaderboard'
-        };
+        return { ...state, screen: 'leaderboard' };
       }
-      return {
-        ...state,
-        currentBattle: next,
-        screen: 'battle'
-      };
+      return { ...state, currentBattle: next, screen: 'battle' };
     }
     case 'HEAL_FULL':
       return {
@@ -79,13 +70,12 @@ function reducer(state: GameState, action: Action): GameState {
     case 'PURCHASE': {
       const item = SHOP_ITEMS.find(i => i.id === action.itemId);
       if (!item) return state;
-      const count = state.purchases[action.itemId] || 0;
       
+      const count = state.purchases[action.itemId] || 0;
       if (count >= item.maxPurchases) return state;
       if (!action.isFree && state.tokens < item.cost) return state;
-      
+
       const h = { ...state.hydra, headPower: [...state.hydra.headPower] as [number, number, number] };
-      
       if (action.itemId.startsWith('head-')) {
         h.headPower[parseInt(action.itemId.split('-')[1])] += 10;
       } else if (action.itemId === 'max-hp') {
@@ -95,17 +85,16 @@ function reducer(state: GameState, action: Action): GameState {
         h.maxEnergy += 15;
         h.energy += 15;
       }
-      
+
       return {
         ...state,
         hydra: h,
         tokens: action.isFree ? state.tokens : state.tokens - item.cost,
-        purchases: {
-          ...state.purchases,
-          [action.itemId]: count + 1
-        },
+        purchases: { ...state.purchases, [action.itemId]: count + 1 },
       };
     }
+    case 'SYNC_TOKENS':
+      return { ...state, tokens: action.tokens };
     case 'RESET':
       return { ...initialState };
     default:
@@ -124,9 +113,10 @@ export function useGameState() {
     loseGame: useCallback(() => dispatch({ type: 'LOSE_GAME' }), []),
     nextBattle: useCallback(() => {
       dispatch({ type: 'HEAL_FULL' });
-      dispatch({ type: 'NEXT_BATTLE' });
+      dispatch({ type: 'NEXT__BATTLE' });
     }, []),
     purchase: useCallback((itemId: string, isFree = false) => dispatch({ type: 'PURCHASE', itemId, isFree }), []),
+    syncTokens: useCallback((tokens: number) => dispatch({ type: 'SYNC_TOKENS', tokens }), []),
     resetGame: useCallback(() => dispatch({ type: 'RESET' }), []),
   };
 }
