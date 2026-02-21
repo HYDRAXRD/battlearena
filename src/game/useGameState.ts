@@ -74,10 +74,8 @@ function reducer(state: GameState, action: Action): GameState {
     case 'PURCHASE': {
       const item = SHOP_ITEMS.find(i => i.id === action.itemId);
       if (!item) return state;
-
       const count = state.purchases[action.itemId] || 0;
       if (count >= item.maxPurchases || state.tokens < item.cost) return state;
-
       const h = { ...state.hydra, headPower: [...state.hydra.headPower] as [number, number, number] };
       
       if (action.itemId.startsWith('head-')) {
@@ -89,7 +87,6 @@ function reducer(state: GameState, action: Action): GameState {
         h.maxEnergy += 15;
         h.energy += 15;
       }
-
       return {
         ...state,
         hydra: h,
@@ -117,7 +114,7 @@ export function useGameState() {
     winBattle: useCallback((tokens: number, score: number) => dispatch({ type: 'WIN_BATTLE', tokens, score }), []),
     nextBattle: useCallback(() => {
       dispatch({ type: 'HEAL_FULL' });
-      dispatch({ type: 'NEXT__BATTLE' });
+      dispatch({ type: 'NEXT_BATTLE' });
     }, []),
     purchase: useCallback((itemId: string) => dispatch({ type: 'PURCHASE', itemId }), []),
     resetGame: useCallback(() => dispatch({ type: 'RESET' }), []),
