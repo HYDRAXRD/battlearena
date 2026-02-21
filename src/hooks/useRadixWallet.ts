@@ -68,12 +68,38 @@ export const useRadixWallet = () => {
   const connect = useCallback(async () => {
     const rdt = getRdt();
     if (!rdt) return;
-    // RDT handles the connection UI via the button component, 
-    // but we can trigger data requests if needed.
+  }, []);
+
+  const disconnect = useCallback(async () => {
+    const rdt = getRdt();
+    if (!rdt) return;
+    rdt.disconnect();
+  }, []);
+
+  const sendTransaction = useCallback(async (
+    transactionManifest: string,
+    message?: string
+  ) => {
+    const rdt = getRdt();
+    if (!rdt) return { isErr: () => true, error: 'RDT not initialized' };
+
+    return rdt.walletApi.sendTransaction({
+      transactionManifest,
+      version: 1,
+      message,
+    });
+  }, []);
+
+  const getShortAddress = useCallback((address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-6)}`;
   }, []);
 
   return {
     ...state,
     connect,
+    disconnect,
+    sendTransaction,
+    getShortAddress,
   };
 };
