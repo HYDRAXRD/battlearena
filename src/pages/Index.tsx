@@ -17,7 +17,7 @@ import hydrToken from '@/assets/hydr-token.png';
 const HydrToken = ({ size = 14 }: { size?: number }) => (
   <img
     src={hydrToken}
-    alt=\"HYDR\"
+    alt="HYDR"
     style={{ width: size, height: size, display: 'inline-block', verticalAlign: 'middle', imageRendering: 'pixelated' }}
   />
 );
@@ -26,7 +26,7 @@ const MuteButton = ({ muted, onToggle }: { muted: boolean; onToggle: () => void 
   <button
     onClick={onToggle}
     title={muted ? 'Unmute' : 'Mute'}
-    className=\"fixed bottom-4 right-4 z-50 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-game-purple/50 bg-black/60 text-white hover:border-game-purple hover:bg-game-purple/20 transition-all shadow-lg\"
+    className="fixed bottom-4 right-4 z-50 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-game-purple/50 bg-black/60 text-white hover:border-game-purple hover:bg-game-purple/20 transition-all shadow-lg"
   >
     {muted ? '🔇 OFF' : '🔊 ON'}
   </button>
@@ -89,24 +89,25 @@ const Index = () => {
     if (connected && accounts.length > 0) {
       try {
         const manifest = `CALL_METHOD
-          Address(\"\${accounts[0].address}\")
-          \"withdraw\"
-          Address(\"\${HYDR_TOKEN}\")
-          Decimal(\"\${item.cost}\");
+          Address("${accounts[0].address}")
+          "withdraw"
+          Address("${HYDR_TOKEN}")
+          Decimal("${item.cost}");
         TAKE_ALL_FROM_WORKTOP
-          Address(\"\${HYDR_TOKEN}\")
-          Bucket(\"bucket1\");
+          Address("${HYDR_TOKEN}")
+          Bucket("bucket1");
         CALL_METHOD
-          Address(\"\${SHOP_ACCOUNT}\")
-          \"deposit\"
-          Bucket(\"bucket1\");
+          Address("${SHOP_ACCOUNT}")
+          "deposit"
+          Bucket("bucket1");
         `;
 
-        const result = await sendTransaction(manifest, `Buy: \${item.name} (\${item.cost} HYDR)`);
+        const result = await sendTransaction(manifest, `Buy: ${item.name} (${item.cost} HYDR)`);
         if (result.isErr()) {
           console.error('Transaction failed:', result.error);
           return;
         }
+
         playSfx('buy');
         purchase(id, true);
       } catch (err) {
@@ -119,22 +120,22 @@ const Index = () => {
   };
 
   return (
-    <div className=\"relative min-h-screen bg-background overflow-hidden\">
+    <div className="relative min-h-screen bg-background overflow-hidden">
       <StarryBackground />
       <MuteButton muted={muted} onToggle={toggleMute} />
       
-      <div className=\"fixed top-4 left-4 z-50\">
+      <div className="fixed top-4 left-4 z-50">
         <RadixConnectButton />
       </div>
 
-      <AnimatePresence mode=\"wait\">
+      <AnimatePresence mode="wait">
         {!hasName && (
-          <NameEntry key=\"name\" onConfirm={handleNameConfirm} />
+          <NameEntry key="name" onConfirm={handleNameConfirm} />
         )}
 
         {hasName && state.screen === 'start' && (
           <StartScreen
-            key=\"start\"
+            key="start"
             playerName={playerName}
             tokens={state.tokens}
             onStart={startGame}
@@ -156,37 +157,37 @@ const Index = () => {
 
         {hasName && state.screen === 'victory' && (
           <motion.div
-            key=\"victory\"
+            key="victory"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className=\"flex flex-col items-center justify-center min-h-screen gap-6 px-4\"
+            className="flex flex-col items-center justify-center min-h-screen gap-6 px-4"
           >
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ repeat: Infinity, duration: 1 }}
-              className=\"text-6xl\"
+              className="text-6xl"
             >
               🎉
             </motion.div>
-            <h1 className=\"font-pixel text-2xl text-game-teal text-center\">VICTORY!</h1>
-            <p className=\"font-pixel text-[10px] text-white/60\">Enemy Defeated!</p>
+            <h1 className="font-pixel text-2xl text-game-teal text-center">VICTORY!</h1>
+            <p className="font-pixel text-[10px] text-white/60">Enemy Defeated!</p>
             
-            <div className=\"font-pixel text-sm text-yellow-400 flex items-center gap-1\">
+            <div className="font-pixel text-sm text-yellow-400 flex items-center gap-1">
               <HydrToken size={16} />
               +{currentEnemy.tokenReward}
             </div>
 
             <button
               onClick={isLastBattle ? () => setScreen('leaderboard') : nextBattle}
-              className=\"font-pixel text-[10px] md:text-sm py-4 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all\"
+              className="font-pixel text-[10px] md:text-sm py-4 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
             >
               {isLastBattle ? '🏆 VIEW RESULTS' : '▶ NEXT BATTLE'}
             </button>
             
             <button
               onClick={() => goShop('victory')}
-              className=\"font-pixel text-[8px] py-3 bg-transparent text-game-teal rounded border-2 border-game-teal/50 hover:bg-game-teal/10 transition-all\"
+              className="font-pixel text-[8px] py-3 bg-transparent text-game-teal rounded border-2 border-game-teal/50 hover:bg-game-teal/10 transition-all"
             >
               🛍 SHOP
             </button>
@@ -195,17 +196,17 @@ const Index = () => {
 
         {hasName && state.screen === 'defeat' && (
           <motion.div
-            key=\"defeat\"
+            key="defeat"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className=\"flex flex-col items-center justify-center min-h-screen gap-6 px-4\"
+            className="flex flex-col items-center justify-center min-h-screen gap-6 px-4"
           >
-            <div className=\"text-6xl\">💀</div>
-            <h1 className=\"font-pixel text-2xl text-red-500\">DEFEATED!</h1>
-            <p className=\"font-pixel text-[8px] text-white/60\">Your Hydra has fallen in battle...</p>
+            <div className="text-6xl">💀</div>
+            <h1 className="font-pixel text-2xl text-red-500">DEFEATED!</h1>
+            <p className="font-pixel text-[8px] text-white/60">Your Hydra has fallen in battle...</p>
             <button
               onClick={() => { resetGame(); setScreen('start'); }}
-              className=\"font-pixel text-[10px] py-4 px-8 bg-red-600 text-white rounded border-b-4 border-red-900 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all\"
+              className="font-pixel text-[10px] py-4 px-8 bg-red-600 text-white rounded border-b-4 border-red-900 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
             >
               🔄 TRY AGAIN
             </button>
@@ -214,7 +215,7 @@ const Index = () => {
 
         {hasName && state.screen === 'shop' && (
           <Shop
-            key=\"shop\"
+            key="shop"
             tokens={state.tokens}
             purchases={state.purchases}
             hydra={state.hydra}
@@ -225,7 +226,7 @@ const Index = () => {
 
         {hasName && state.screen === 'leaderboard' && (
           <Leaderboard
-            key=\"leaderboard\"
+            key="leaderboard"
             playerName={playerName}
             totalScore={state.totalScore}
             tokens={state.tokens}
