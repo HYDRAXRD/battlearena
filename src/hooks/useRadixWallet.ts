@@ -23,45 +23,55 @@ let rdtInstance: ReturnType<typeof RadixDappToolkit> | null = null;
 
 export const getRdt = (): ReturnType<typeof RadixDappToolkit> | null => rdtInstance;
 
-export const initRdt = (): ReturnType<typeof RadixDappToolkit> => {
+export const initRdt = (): ReturnType<typeof RadixDappToolkit> | null => {
   if (rdtInstance) return rdtInstance;
-
-  rdtInstance = RadixDappToolkit({
-    dAppDefinitionAddress:
-      'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak',
-    networkId: RadixNetwork.Stokenet,
-    applicationName: 'BattleArena',
-    applicationVersion: '1.0.0',
-  });
-
-  rdtInstance.walletApi.setRequestData(
-    DataRequestBuilder.accounts().atLeast(1)
-  );
-
-  return rdtInstance;
+  try {
+    rdtInstance = RadixDappToolkit({
+      dAppDefinitionAddress:
+        'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak',
+      networkId: RadixNetwork.Stokenet,
+      applicationName: 'BattleArena',
+      applicationVersion: '1.0.0',
+    });
+    rdtInstance.walletApi.setRequestData(
+      DataRequestBuilder.accounts().atLeast(1)
+    );
+    return rdtInstance;
+  } catch (e) {
+    console.warn('RadixDappToolkit init failed:', e);
+    return null;
+  }
 };
 
 export const useRadixWallet = () => {
   const [state, setState] = useState<RadixWalletState>({
     connected: false,
     accounts: [],
-    isLoading: true,
+    isLoading: false,
   });
 
   useEffect(() => {
-    const rdt = initRdt();
-
-    const subscription = rdt.walletApi.walletData$.subscribe((walletData) => {
-      setState({
-        connected: !!walletData.accounts.length,
-        accounts: walletData.accounts,
-        personaLabel: walletData.persona?.label,
-        isLoading: false,
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      const rdt = initRdt();
+      if (!rdt) return;
+      subscription = rdt.walletApi.walletData$.subscribe((walletData) => {
+        try {
+          setState({
+            connected: !!(walletData?.accounts?.length),
+            accounts: walletData?.accounts ?? [],
+            personaLabel: walletData?.persona?.label,
+            isLoading: false,
+          });
+        } catch (e) {
+          console.warn('walletData subscribe error:', e);
+        }
       });
-    });
-
+    } catch (e) {
+      console.warn('useRadixWallet effect error:', e);
+    }
     return () => {
-      subscription.unsubscribe();
+      try { subscription?.unsubscribe(); } catch (_) {}
     };
   }, []);
 
@@ -73,7 +83,7 @@ export const useRadixWallet = () => {
   const disconnect = useCallback(async () => {
     const rdt = getRdt();
     if (!rdt) return;
-    rdt.disconnect();
+    try { rdt.disconnect(); } catch (e) { console.warn('disconnect error:', e); }
   }, []);
 
   const sendTransaction = useCallback(async (
@@ -81,13 +91,16 @@ export const useRadixWallet = () => {
     message?: string
   ) => {
     const rdt = getRdt();
-    if (!rdt) return { isErr: () => true, error: 'RDT not initialized' };
-
-    return rdt.walletApi.sendTransaction({
-      transactionManifest,
-      version: 1,
-      message,
-    });
+    if (!rdt) return { isErr: () => true as const, error: 'RDT not initialized' };
+    try {
+      return await rdt.walletApi.sendTransaction({
+        transactionManifest,
+        version: 1,
+        message,
+      });
+    } catch (e) {
+      return { isErr: () => true as const, error: String(e) };
+    }
   }, []);
 
   const getShortAddress = useCallback((address: string) => {
