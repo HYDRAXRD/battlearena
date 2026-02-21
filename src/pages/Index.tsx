@@ -197,7 +197,7 @@ const Index = () => {
 
         {hasName && state.screen === 'leaderboard' && (
           <motion.div key="leaderboard" initial={{ opacity: 0, y: -100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="h-screen">
-            <Leaderboard score={state.totalScore} onBack={() => setScreen('start')} />
+                        <Leaderboard playerName={playerName} playerScore={state.totalScore} onBack={() => setScreen('start')} />
           </motion.div>
         )}
       </AnimatePresence>
