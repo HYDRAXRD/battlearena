@@ -22,7 +22,6 @@ const HydrToken = ({ size = 14 }: { size?: number }) => (
   />
 );
 
-// Mute/Unmute floating button
 const MuteButton = ({ muted, onToggle }: { muted: boolean; onToggle: () => void }) => (
   <button
     onClick={onToggle}
@@ -45,7 +44,6 @@ const Index = () => {
   const currentEnemy = ENEMIES[Math.min(state.currentBattle, ENEMIES.length - 1)];
   const isLastBattle = state.currentBattle >= ENEMIES.length - 1;
 
-  // -- Switch music based on screen --
   useEffect(() => {
     if (state.screen === 'battle') {
       playMode('battle');
@@ -56,7 +54,6 @@ const Index = () => {
     }
   }, [state.screen, playMode, stopAll]);
 
-  // Start menu music once name is entered
   useEffect(() => {
     if (hasName && state.screen === 'start') playMode('menu');
   }, [hasName, state.screen, playMode]);
@@ -82,25 +79,31 @@ const Index = () => {
     setScreen('defeat');
   };
 
+  // HYDR token resource address on Stokenet
+  const HYDR_TOKEN = 'resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh';
+  // Shop receiver account on Stokenet
+  const SHOP_ACCOUNT = 'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak';
+
   const handlePurchase = async (id: string) => {
     const item = SHOP_ITEMS.find(i => i.id === id);
     if (!item) return;
 
-    // If wallet is connected, try real transaction
     if (connected && accounts.length > 0) {
       try {
-        const manifest = `
-  CALL_METHOD
-    Address("${accounts[0].address}")
-    "withdraw"
-    Address("resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh")
-    Decimal("${item.cost}");
-  CALL_METHOD
-    Address("account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak")
-    "deposit_batch"
-    Expression("ENTIRE_WORKTOP");
+        const manifest = `CALL_METHOD
+  Address("${accounts[0].address}")
+  "withdraw"
+  Address("${HYDR_TOKEN}")
+  Decimal("${item.cost}");
+TAKE_ALL_FROM_WORKTOP
+  Address("${HYDR_TOKEN}")
+  Bucket("bucket1");
+CALL_METHOD
+  Address("${SHOP_ACCOUNT}")
+  "deposit"
+  Bucket("bucket1");
 `;
-        const result = await sendTransaction(manifest, `Buying ${item.name}`);
+        const result = await sendTransaction(manifest, `Buy: ${item.name} (${item.cost} HYDR)`);
         if (result.isErr()) {
           console.error('Transaction failed:', result.error);
           return;
@@ -111,7 +114,6 @@ const Index = () => {
         console.error('Purchase error:', err);
       }
     } else {
-      // Fallback for demo/unconnected state
       playSfx('buy');
       purchase(id);
     }
@@ -121,7 +123,6 @@ const Index = () => {
     <div className="relative min-h-screen bg-black overflow-hidden">
       <StarryBackground />
 
-      {/* Radix Wallet Connect Button */}
       <div className="absolute top-4 right-4 z-50">
         <RadixConnectButton />
       </div>
@@ -134,9 +135,6 @@ const Index = () => {
         {hasName && state.screen === 'start' && (
           <StartScreen
             key="start"
-            playerName={playerName}
-            hydra={state.hydra}
-            tokens={state.tokens}
             onStart={startGame}
             onShop={() => goShop('start')}
             onLeaderboard={() => setScreen('leaderboard')}
@@ -145,11 +143,10 @@ const Index = () => {
 
         {hasName && state.screen === 'battle' && (
           <BattleArena
-            key="battle"
+            key={`battle-${state.currentBattle}`}
             hydra={state.hydra}
-            enemy={currentEnemy}
-            tokens={state.tokens}
-            cdReduction={cdReduction}
+            battleIndex={state.currentBattle}
+            cooldownReduction={cdReduction}
             onWin={handleWinBattle}
             onLose={handleLose}
           />
