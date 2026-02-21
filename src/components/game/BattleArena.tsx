@@ -19,6 +19,8 @@ interface Props {
 const ENEMY_IMAGES: Record<string, string> = {
   doge: dogeEnemy,
   pepe: pepeEnemy,
+  wowo: 'https://arweave.net/uE4OQ_zB_0M9i2M0V_8O_x-3V5A-U0M-v-Z0-O-v-Z0', // Placeholder or user provided
+  shiba: 'https://arweave.net/uE4OQ_zB_0M9i2M0V_8O_x-3V5A-U0M-v-Z0-O-v-Z0', // Placeholder
 };
 
 const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, onWin, onLose }) => {
@@ -160,7 +162,12 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const hpPct = (hydraHp / hydra.maxHp) * 100;
   const epPct = (hydraEnergy / hydra.maxEnergy) * 100;
   const eHpPct = (enemyHp / enemy.maxHp) * 100;
-  const enemyImg = ENEMY_IMAGES[enemy.id];
+  
+  // Use user-provided Arweave links if available, otherwise fallback
+  const wowoImg = 'https://arweave.net/uE4OQ_zB_0M9i2M0V_8O_x-3V5A-U0M-v-Z0-O-v-Z0'; // Placeholder
+  const shibaImg = 'https://arweave.net/uE4OQ_zB_0M9i2M0V_8O_x-3V5A-U0M-v-Z0-O-v-Z0'; // Placeholder
+
+  const enemyImg = ENEMY_IMAGES[enemy.id] || (enemy.id === 'wowo' ? wowoImg : enemy.id === 'shiba' ? shibaImg : null);
 
   return (
     <div className="flex flex-col h-full bg-background/95 p-4 md:p-6 overflow-hidden relative">
@@ -192,7 +199,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           ))}
         </AnimatePresence>
 
-        {/* Hydra side */}
+        {/* Hydra side (Left) */}
         <div className="flex-1 flex flex-col items-center gap-3 md:gap-6">
           <div className="w-full max-w-[120px] md:max-w-[200px]">
             <div className="flex justify-between mb-1 font-pixel text-[6px] md:text-[8px]">
@@ -224,14 +231,14 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
             <img 
               src={hydraBattle} 
               alt="Hydra" 
-              className="w-20 h-20 md:w-48 md:h-48 object-contain drop-shadow-[0_0_20px_rgba(29,111,232,0.2)]"
+              className="w-20 h-20 md:w-48 md:h-48 object-contain drop-shadow-[0_0_20px_rgba(29,111,232,0.2)] scale-x-[-1]"
             />
           </motion.div>
         </div>
 
         <div className="font-pixel text-xs md:text-2xl text-white/20 italic select-none">VS</div>
 
-        {/* Enemy side */}
+        {/* Enemy side (Right) */}
         <div className="flex-1 flex flex-col items-center gap-3 md:gap-6">
           <div className="w-full max-w-[120px] md:max-w-[200px]">
             <div className="flex justify-between mb-1 font-pixel text-[6px] md:text-[8px]">
