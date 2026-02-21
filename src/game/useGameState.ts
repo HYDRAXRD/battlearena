@@ -17,7 +17,7 @@ type Action =
   | { type: 'WIN_BATTLE'; tokens: number; score: number }
   | { type: 'NEXT_BATTLE' }
   | { type: 'HEAL_FULL' }
-  | { type: 'PURCHASE'; itemId: string }
+  | { type: 'PURCHASE'; itemId: string; isFree?: boolean }
   | { type: 'RESET' };
 
 const initialState: GameState = {
@@ -49,7 +49,6 @@ function reducer(state: GameState, action: Action): GameState {
       };
     case 'NEXT_BATTLE': {
       const next = state.currentBattle + 1;
-      // Safety check for enemy array bounds
       if (next >= ENEMIES.length) {
         return {
           ...state,
@@ -75,7 +74,10 @@ function reducer(state: GameState, action: Action): GameState {
       const item = SHOP_ITEMS.find(i => i.id === action.itemId);
       if (!item) return state;
       const count = state.purchases[action.itemId] || 0;
-      if (count >= item.maxPurchases || state.tokens < item.cost) return state;
+      
+      if (count >= item.maxPurchases) return state;
+      if (!action.isFree && state.tokens < item.cost) return state;
+      
       const h = { ...state.hydra, headPower: [...state.hydra.headPower] as [number, number, number] };
       
       if (action.itemId.startsWith('head-')) {
@@ -87,10 +89,11 @@ function reducer(state: GameState, action: Action): GameState {
         h.maxEnergy += 15;
         h.energy += 15;
       }
+      
       return {
         ...state,
         hydra: h,
-        tokens: state.tokens - item.cost,
+        tokens: action.isFree ? state.tokens : state.tokens - item.cost,
         purchases: {
           ...state.purchases,
           [action.itemId]: count + 1
@@ -116,7 +119,7 @@ export function useGameState() {
       dispatch({ type: 'HEAL_FULL' });
       dispatch({ type: 'NEXT_BATTLE' });
     }, []),
-    purchase: useCallback((itemId: string) => dispatch({ type: 'PURCHASE', itemId }), []),
+    purchase: useCallback((itemId: string, isFree = false) => dispatch({ type: 'PURCHASE', itemId, isFree }), []),
     resetGame: useCallback(() => dispatch({ type: 'RESET' }), []),
   };
 }
