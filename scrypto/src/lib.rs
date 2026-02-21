@@ -3,19 +3,19 @@ use scrypto::prelude::*;
 #[blueprint]
 mod battle_arena {
     struct BattleArena {
-        /// Vault to store the reward tokens (HYDRA)
+        /// Cofre para armazenar os tokens de recompensa (HYDRA)
         reward_vault: Vault,
     }
 
     impl BattleArena {
-        /// Instantiate a new BattleArena component using an existing reward token.
-        /// reward_tokens: A bucket containing the initial HYDRA tokens for rewards.
+        /// Instancia um novo componente BattleArena usando um recurso de token de recompensa existente
+        /// reward_tokens: Um bucket contendo os tokens HYDRA iniciais para recompensas
         pub fn instantiate_battle_arena(reward_tokens: Bucket) -> Global<BattleArena> {
-            // Check if the resource passed is the correct HYDRA token (Stokenet resource address provided by user)
+            // Verifica se o recurso passado é o token HYDRA correto (Stokenet)
             assert_eq!(
                 reward_tokens.resource_address(),
-                Address::from("resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r"),
-                "Invalid reward token resource address"
+                Address::from("resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh"),
+                "Endereço de recurso de token de recompensa inválido"
             );
 
             Self {
@@ -26,9 +26,9 @@ mod battle_arena {
             .globalize()
         }
 
-        /// Claim a reward from the battle arena.
         pub fn claim_reward(&mut self, amount: Decimal) -> Bucket {
-            info!("A warrior claims {} HYDRA tokens!", amount);
+            // Lógica simples de recompensa para o torneio
+            info!("Um guerreiro reivindicou {} tokens HYDRA!", amount);
             self.reward_vault.take(amount)
         }
     }
