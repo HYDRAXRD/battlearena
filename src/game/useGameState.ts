@@ -34,7 +34,12 @@ function reducer(state: GameState, action: Action): GameState {
     case 'SET_SCREEN':
       return { ...state, screen: action.screen };
     case 'START_GAME':
-      return { ...initialState, screen: 'battle' };
+      return { 
+        ...initialState, 
+        hydra: { ...INITIAL_HYDRA },
+        currentBattle: 0,
+        screen: 'battle' 
+      };
     case 'WIN_BATTLE':
       return {
         ...state,
@@ -44,21 +49,37 @@ function reducer(state: GameState, action: Action): GameState {
       };
     case 'NEXT_BATTLE': {
       const next = state.currentBattle + 1;
-      return next >= ENEMIES.length
-        ? { ...state, currentBattle: next, screen: 'leaderboard' }
-        : { ...state, currentBattle: next, screen: 'battle' };
+      // Safety check for enemy array bounds
+      if (next >= ENEMIES.length) {
+        return {
+          ...state,
+          screen: 'leaderboard'
+        };
+      }
+      return {
+        ...state,
+        currentBattle: next,
+        screen: 'battle'
+      };
     }
     case 'HEAL_FULL':
       return {
         ...state,
-        hydra: { ...state.hydra, hp: state.hydra.maxHp, energy: state.hydra.maxEnergy },
+        hydra: {
+          ...state.hydra,
+          hp: state.hydra.maxHp,
+          energy: state.hydra.maxEnergy,
+        },
       };
     case 'PURCHASE': {
       const item = SHOP_ITEMS.find(i => i.id === action.itemId);
       if (!item) return state;
+
       const count = state.purchases[action.itemId] || 0;
       if (count >= item.maxPurchases || state.tokens < item.cost) return state;
+
       const h = { ...state.hydra, headPower: [...state.hydra.headPower] as [number, number, number] };
+      
       if (action.itemId.startsWith('head-')) {
         h.headPower[parseInt(action.itemId.split('-')[1])] += 10;
       } else if (action.itemId === 'max-hp') {
@@ -68,11 +89,15 @@ function reducer(state: GameState, action: Action): GameState {
         h.maxEnergy += 15;
         h.energy += 15;
       }
+
       return {
         ...state,
         hydra: h,
         tokens: state.tokens - item.cost,
-        purchases: { ...state.purchases, [action.itemId]: count + 1 },
+        purchases: {
+          ...state.purchases,
+          [action.itemId]: count + 1
+        },
       };
     }
     case 'RESET':
@@ -84,6 +109,7 @@ function reducer(state: GameState, action: Action): GameState {
 
 export function useGameState() {
   const [state, dispatch] = useReducer(reducer, initialState);
+
   return {
     state,
     setScreen: useCallback((screen: GameScreen) => dispatch({ type: 'SET_SCREEN', screen }), []),
@@ -91,7 +117,7 @@ export function useGameState() {
     winBattle: useCallback((tokens: number, score: number) => dispatch({ type: 'WIN_BATTLE', tokens, score }), []),
     nextBattle: useCallback(() => {
       dispatch({ type: 'HEAL_FULL' });
-      dispatch({ type: 'NEXT_BATTLE' });
+      dispatch({ type: 'NEXT__BATTLE' });
     }, []),
     purchase: useCallback((itemId: string) => dispatch({ type: 'PURCHASE', itemId }), []),
     resetGame: useCallback(() => dispatch({ type: 'RESET' }), []),
