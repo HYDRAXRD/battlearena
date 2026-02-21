@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGameState } from '@/game/useGameState';
 import { ENEMIES } from '@/game/constants';
@@ -10,10 +10,22 @@ import BattleArena from '@/components/game/BattleArena';
 import Shop from '@/components/game/Shop';
 import Leaderboard from '@/components/game/Leaderboard';
 import RadixConnectButton from '@/components/game/RadixConnectButton';
+import { useGameAudio } from '@/hooks/useGameAudio';
 import hydrToken from '@/assets/hydr-token.png';
 
 const HydrToken = ({ size = 14 }: { size?: number }) => (
   <img src={hydrToken} alt="HYDR" style={{ width: size, height: size, display: 'inline-block', verticalAlign: 'middle', imageRendering: 'pixelated' }} />
+);
+
+// Mute/Unmute floating button
+const MuteButton = ({ muted, onToggle }: { muted: boolean; onToggle: () => void }) => (
+  <button
+    onClick={onToggle}
+    title={muted ? 'Unmute' : 'Mute'}
+    className="fixed bottom-4 right-4 z-50 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-game-purple/50 bg-black/60 text-white hover:border-game-purple hover:bg-game-purple/20 transition-all shadow-lg"
+  >
+    {muted ? '\ud83d\udd07 OFF' : '\ud83d\udd0a ON'}
+  </button>
 );
 
 const Index = () => {
@@ -21,16 +33,50 @@ const Index = () => {
   const [shopReturn, setShopReturn] = useState<GameScreen>('start');
   const [playerName, setPlayerName] = useState('');
   const [hasName, setHasName] = useState(false);
+  const { muted, toggleMute, playMode, stopAll, playSfx } = useGameAudio();
 
   const cdReduction = state.purchases['cooldown'] || 0;
   const currentEnemy = ENEMIES[Math.min(state.currentBattle, ENEMIES.length - 1)];
   const isLastBattle = state.currentBattle >= ENEMIES.length - 1;
+
+  // ── Switch music based on screen ──
+  useEffect(() => {
+    if (state.screen === 'battle') {
+      playMode('battle');
+    } else if (state.screen === 'start') {
+      playMode('menu');
+    } else if (state.screen === 'leaderboard' || state.screen === 'defeat') {
+      stopAll();
+    }
+    // victory/shop: keep current music
+  }, [state.screen, playMode, stopAll]);
+
+  // Start menu music once name is entered
+  useEffect(() => {
+    if (hasName && state.screen === 'start') playMode('menu');
+  }, [hasName, state.screen, playMode]);
 
   const goShop = (from: GameScreen) => { setShopReturn(from); setScreen('shop'); };
 
   const handleNameConfirm = (name: string) => {
     setPlayerName(name);
     setHasName(true);
+  };
+
+  const handleWinBattle = (t: number, s: number) => {
+    playSfx('win');
+    winBattle(t, s);
+  };
+
+  const handleLose = () => {
+    playSfx('lose');
+    stopAll();
+    setScreen('defeat');
+  };
+
+  const handlePurchase = (id: string) => {
+    playSfx('buy');
+    purchase(id);
   };
 
   return (
@@ -41,6 +87,9 @@ const Index = () => {
       <div className="fixed top-4 right-4 z-50">
         <RadixConnectButton />
       </div>
+
+      {/* Audio toggle - bottom right */}
+      <MuteButton muted={muted} onToggle={toggleMute} />
 
       <AnimatePresence mode="wait">
         {/* Name Entry - shown first before start screen */}
@@ -67,8 +116,9 @@ const Index = () => {
                 hydra={state.hydra}
                 battleIndex={state.currentBattle}
                 cooldownReduction={cdReduction}
-                onWin={(t, s) => winBattle(t, s)}
-                onLose={() => setScreen('defeat')}
+                onWin={handleWinBattle}
+                onLose={handleLose}
+                playSfx={playSfx}
               />
             </div>
           </motion.div>
@@ -77,7 +127,7 @@ const Index = () => {
         {hasName && state.screen === 'victory' && (
           <motion.div key="victory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4">
-              <div className="text-6xl">\ud83c\udf89</div>
+              <div className="text-6xl">🎉</div>
               <h1 className="font-pixel text-2xl text-game-purple text-center">VICTORY!</h1>
               <div className="font-pixel text-sm text-yellow-400 flex items-center gap-2">
                 +{currentEnemy.tokenReward} <HydrToken size={16} /> HYDR
@@ -87,13 +137,13 @@ const Index = () => {
                   onClick={nextBattle}
                   className="font-pixel text-[8px] py-3 bg-game-purple text-white rounded border-2 border-game-purple hover:bg-game-purple/80 transition-all"
                 >
-                  {isLastBattle ? '\ud83c\udfc6 VIEW RESULTS' : '\u25b6 NEXT BATTLE'}
+                  {isLastBattle ? '🏆 VIEW RESULTS' : '▶ NEXT BATTLE'}
                 </button>
                 <button
                   onClick={() => goShop('victory')}
                   className="font-pixel text-[8px] py-3 bg-transparent text-game-teal rounded border-2 border-game-teal/50 hover:bg-game-teal/10 transition-all"
                 >
-                  \ud83d\uded2 SHOP
+                  🛒 SHOP
                 </button>
               </div>
             </div>
@@ -103,7 +153,7 @@ const Index = () => {
         {hasName && state.screen === 'defeat' && (
           <motion.div key="defeat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4">
-              <div className="text-6xl">\ud83d\udc80</div>
+              <div className="text-6xl">💀</div>
               <h1 className="font-pixel text-2xl text-red-500 text-center">DEFEATED!</h1>
               <p className="font-pixel text-[9px] text-gray-400 text-center">
                 Your Hydra has fallen in battle...
@@ -115,7 +165,7 @@ const Index = () => {
                 onClick={resetGame}
                 className="font-pixel text-[9px] py-3 px-6 bg-game-purple text-white rounded border-2 border-game-purple hover:bg-game-purple/80 transition-all"
               >
-                \ud83d\udd04 TRY AGAIN
+                🔄 TRY AGAIN
               </button>
             </div>
           </motion.div>
@@ -127,7 +177,7 @@ const Index = () => {
               tokens={state.tokens}
               purchases={state.purchases}
               hydra={state.hydra}
-              onPurchase={purchase}
+              onPurchase={handlePurchase}
               onBack={() => setScreen(shopReturn)}
             />
           </motion.div>
