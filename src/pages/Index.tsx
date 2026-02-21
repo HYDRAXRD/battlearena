@@ -191,7 +191,7 @@ const Index = () => {
 
         {hasName && state.screen === 'shop' && (
           <motion.div key="shop" initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -100 }} className="h-screen">
-            <Shop tokens={state.tokens} purchases={state.purchases} onPurchase={handlePurchase} onBack={() => setScreen(shopReturn)} />
+                        <Shop tokens={state.tokens} purchases={state.purchases} hydra={state.hydra} onPurchase={handlePurchase} onBack={() => setScreen(shopReturn)} />
           </motion.div>
         )}
 
