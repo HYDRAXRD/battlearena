@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react ';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGameState } from '@/game/useGameState';
 import { ENEMIES, SHOP_ITEMS } from '@/game/constants';
@@ -89,13 +89,13 @@ const Index = () => {
 CALL_METHOD
   Address("${accounts[0].address}")
   "withdraw"
-  Address("resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r")
+  Address("resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh")
   Decimal("${item.cost}");
 CALL_METHOD
-  Address("account_rdx12xdm5b6dlnmzz8hpc67f44kqjfhwfqfwhz5y0qm2sc4g2gpuwv2wkl")
+  Address("account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak")
   "deposit_batch"
   Expression("ENTIRE_WORKTOP");
-        `;
+`;
         
         const result = await sendTransaction(manifest, `Buying ${item.name}`);
         if (result.isErr()) {
@@ -123,16 +123,13 @@ CALL_METHOD
       <div className="fixed top-4 right-4 z-50">
         <RadixConnectButton />
       </div>
-
       <MuteButton muted={muted} onToggle={toggleMute} />
-
       <AnimatePresence mode="wait">
         {!hasName && (
           <motion.div key="name-entry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <NameEntry onConfirm={handleNameConfirm} />
           </motion.div>
         )}
-
         {hasName && state.screen === 'start' && (
           <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <StartScreen
@@ -142,7 +139,6 @@ CALL_METHOD
             />
           </motion.div>
         )}
-
         {hasName && state.screen === 'battle' && (
           <motion.div key={`battle-${state.currentBattle}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="min-h-screen flex items-center justify-center px-4 py-8">
@@ -156,7 +152,6 @@ CALL_METHOD
             </div>
           </motion.div>
         )}
-
         {hasName && state.screen === 'victory' && (
           <motion.div key="victory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4">
@@ -182,7 +177,6 @@ CALL_METHOD
             </div>
           </motion.div>
         )}
-
         {hasName && state.screen === 'defeat' && (
           <motion.div key="defeat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4">
@@ -200,7 +194,6 @@ CALL_METHOD
             </div>
           </motion.div>
         )}
-
         {hasName && state.screen === 'shop' && (
           <motion.div key="shop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Shop
@@ -212,7 +205,6 @@ CALL_METHOD
             />
           </motion.div>
         )}
-
         {hasName && state.screen === 'leaderboard' && (
           <motion.div key="leaderboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <Leaderboard
