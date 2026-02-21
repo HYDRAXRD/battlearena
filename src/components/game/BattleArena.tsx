@@ -34,10 +34,22 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const [shakeHydra, setShakeHydra] = useState(false);
   const [shakeEnemy, setShakeEnemy] = useState(false);
   const [log, setLog] = useState<string[]>(['Battle start!']);
-
+  
   const battleOverRef = useRef(false);
   const enemyHpRef = useRef(enemy.maxHp);
   const popupIdRef = useRef(0);
+
+  // Reset battle state when battleIndex changes (fix for getting stuck after 1st fight)
+  useEffect(() => {
+    battleOverRef.current = false;
+    setHydraHp(hydra.hp);
+    setHydraEnergy(hydra.energy);
+    setEnemyHp(enemy.maxHp);
+    enemyHpRef.current = enemy.maxHp;
+    setCooldowns({});
+    setLog([`A new challenger appears: ${enemy.name}!`]);
+  }, [battleIndex, enemy.maxHp, enemy.name, hydra.hp, hydra.energy]);
+
   enemyHpRef.current = enemyHp;
 
   const addPopup = useCallback((value: number, side: 'left' | 'right', isHeal = false, isMiss = false) => {
@@ -150,135 +162,128 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const hpPct = (hydraHp / hydra.maxHp) * 100;
   const epPct = (hydraEnergy / hydra.maxEnergy) * 100;
   const eHpPct = (enemyHp / enemy.maxHp) * 100;
-
   const enemyImg = ENEMY_IMAGES[enemy.id];
 
   return (
-    <div className="flex flex-col h-full bg-black/40 backdrop-blur-sm rounded-lg overflow-hidden border-2 border-game-purple/30">
-      <div className="bg-gradient-to-r from-game-purple/20 to-transparent p-4 flex justify-between items-center border-b border-game-purple/30">
-        <div>
-          <h2 className="font-pixel text-xs text-game-teal mb-1 tracking-wider">BATTLE {battleIndex + 1}/{ENEMIES.length}</h2>
-          <div className="flex items-center gap-2">
-            <span className="font-pixel text-[10px] text-white">vs {enemy.name}</span>
-            <span className="font-pixel text-[7px] text-gray-500 uppercase">{enemy.subtitle}</span>
+    <div className="relative z-10 w-full max-w-2xl mx-auto px-4 py-4 flex flex-col min-h-screen">
+      <div className="text-center font-pixel text-[8px] md:text-[10px] text-game-teal mb-4 animate-pulse">
+        BATTLE {battleIndex + 1}/{ENEMIES.length}
+        <br />
+        -----------------------------------------
+      </div>
+
+      <div className="flex justify-between items-start mb-8">
+        <div className="w-5/12">
+          <div className="font-pixel text-[7px] text-white mb-1">HYDRA</div>
+          <div className="w-full h-3 bg-gray-800 border-2 border-black rounded-sm overflow-hidden mb-1">
+            <motion.div animate={{ width: `${hpPct}%` }} className="h-full bg-red-500" />
           </div>
+          <div className="w-full h-1.5 bg-gray-800 border border-black rounded-sm overflow-hidden">
+            <motion.div animate={{ width: `${epPct}%` }} className="h-full bg-blue-500" />
+          </div>
+          <div className="font-pixel text-[5px] text-right text-gray-400 mt-1">{Math.max(0, hydraHp)}/{hydra.maxHp} HP</div>
+        </div>
+
+        <div className="w-5/12 text-right">
+          <div className="font-pixel text-[7px] text-white mb-1">{enemy.name}</div>
+          <div className="w-full h-3 bg-gray-800 border-2 border-black rounded-sm overflow-hidden mb-1">
+            <motion.div animate={{ width: `${eHpPct}%` }} className="h-full bg-red-500" />
+          </div>
+          <div className="font-pixel text-[5px] text-gray-400 mt-1">{Math.max(0, enemyHp)}/{enemy.maxHp} HP</div>
+          <div className="font-pixel text-[6px] text-game-teal italic mt-1">{enemy.subtitle}</div>
         </div>
       </div>
 
-      <div className="relative flex-1 min-h-[200px] bg-gradient-to-b from-transparent to-game-purple/10 overflow-hidden">
+      {/* Battle Visual Container - Centered and Aligned */}
+      <div className="flex-1 relative flex items-center justify-center min-h-[300px] mb-8">
         <AnimatePresence>
           {popups.map(p => (
             <motion.div
               key={p.id}
               initial={{ opacity: 1, y: p.y, x: `${p.x}%` }}
               animate={{ opacity: 0, y: p.y - 40 }}
-              className={`absolute font-pixel text-[10px] md:text-sm z-50 pointer-events-none ${
-                p.isMiss ? 'text-gray-400' : p.isHeal ? 'text-game-teal' : 'text-red-500'
-              }`}
-              style={{ textShadow: '2px 2px 0 #000' }}
+              className={`absolute font-pixel text-[12px] md:text-lg z-20 pointer-events-none ${p.isMiss ? 'text-gray-400' : p.isHeal ? 'text-green-400' : 'text-red-500'}`}
+              style={{ left: 0, top: 0 }}
             >
               {p.isMiss ? 'MISS' : p.isHeal ? `+${p.value}` : `-${p.value}`}
             </motion.div>
           ))}
         </AnimatePresence>
 
-        <div className="absolute inset-x-0 top-6 px-4 md:px-12 flex justify-between items-start z-10">
-          <div className="w-[45%]">
-            <div className="flex justify-between items-end mb-1">
-              <span className="font-pixel text-[7px] text-white/70 tracking-tighter">HYDRA</span>
-              <span className="font-pixel text-[8px] text-white">{Math.max(0, hydraHp)}/{hydra.maxHp}</span>
-            </div>
-            <div className="h-3 bg-gray-900 border border-white/20 rounded-sm overflow-hidden p-[1px]">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-sm"
-                animate={{ width: `${hpPct}%` }}
+        <div className="relative w-full h-full flex items-center justify-around px-8">
+          {/* Hydra Side */}
+          <motion.div 
+            animate={shakeHydra ? { x: [-5, 5, -5, 5, 0] } : {}}
+            className="relative z-10"
+          >
+            <img 
+              src={hydraBattle} 
+              alt="Hydra" 
+              className="w-40 md:w-56 object-contain filter drop-shadow-[0_0_20px_rgba(29,111,232,0.4)]"
+              style={{ imageRendering: 'pixelated' }} 
+            />
+          </motion.div>
+
+          <div className="font-pixel text-lg text-game-purple opacity-40 animate-pulse">VS</div>
+
+          {/* Enemy Side */}
+          <motion.div 
+            animate={shakeEnemy ? { x: [5, -5, 5, -5, 0] } : {}}
+            className="relative z-10"
+          >
+            {enemyImg ? (
+              <img 
+                src={enemyImg} 
+                alt={enemy.name} 
+                className="w-40 md:w-56 object-contain filter drop-shadow-[0_0_20px_rgba(184,20,166,0.4)]"
+                style={{ imageRendering: 'pixelated' }} 
               />
-            </div>
-          </div>
-
-          <div className="w-[45%]">
-            <div className="flex justify-between items-end mb-1">
-              <span className="font-pixel text-[8px] text-white">{Math.max(0, enemyHp)}/{enemy.maxHp}</span>
-              <span className="font-pixel text-[7px] text-white/70 text-right uppercase tracking-tighter">{enemy.name}</span>
-            </div>
-            <div className="h-3 bg-gray-900 border border-white/20 rounded-sm overflow-hidden p-[1px]">
-              <motion.div 
-                className="h-full bg-gradient-to-l from-game-purple to-purple-400 rounded-sm"
-                animate={{ width: `${eHpPct}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-full h-full relative flex items-center justify-around px-8">
-            <motion.div
-              animate={shakeHydra ? { x: [-5, 5, -5, 5, 0] } : {}}
-              className="relative w-32 h-32 md:w-48 md:h-48"
-            >
-              <img src={hydraBattle} className="w-full h-full object-contain filter drop-shadow-[0_0_20px_rgba(29,111,232,0.4)]" alt="Hydra" />
-            </motion.div>
-
-            <div className="font-pixel text-game-teal text-lg md:text-2xl animate-pulse opacity-30 mt-12">VS</div>
-
-            <motion.div
-              animate={shakeEnemy ? { x: [5, -5, 5, -5, 0] } : {}}
-              className="relative w-32 h-32 md:w-48 md:h-48"
-            >
-              {enemyImg ? (
-                <img src={enemyImg} className="w-full h-full object-contain filter drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]" alt={enemy.name} />
-              ) : (
-                <div className="w-full h-full bg-gray-800 rounded animate-pulse" />
-              )}
-            </motion.div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[85%] md:w-1/2 flex flex-col gap-1.5 z-20">
-          {log.slice(-3).map((m, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1 - i * 0.2, x: 0 }}
-              className="font-pixel text-[6px] md:text-[8px] text-white/60 bg-black/40 px-2 py-1 rounded border-l-2 border-game-teal/50"
-            >
-              {m}
-            </motion.div>
-          ))}
+            ) : (
+              <div className="w-40 h-40 bg-gray-800 rounded-full border-4 border-game-purple flex items-center justify-center text-4xl">👾</div>
+            )}
+          </motion.div>
         </div>
       </div>
 
-      <div className="p-4 bg-black/60 grid grid-cols-2 md:grid-cols-4 gap-2 border-t border-game-purple/30">
-        {ABILITIES.map((ab, i) => {
-          const cd = cooldowns[ab.id] || 0;
-          const disabled = cd > 0 || hydraEnergy < ab.energyCost || battleOverRef.current;
-          
-          return (
-            <button
-              key={ab.id}
-              onClick={() => useAbility(i)}
-              disabled={disabled}
-              className={`relative font-pixel text-[6px] md:text-[7px] p-3 rounded border-2 transition-all ${
-                disabled 
-                  ? 'bg-gray-800/50 border-gray-700 text-gray-600 cursor-not-allowed' 
-                  : 'bg-background border-game-purple/50 text-white hover:border-game-purple hover:shadow-[0_0_15px_rgba(29,111,232,0.3)] active:scale-95'
-              }`}
-            >
-              <div className="flex flex-col items-center gap-1.5">
-                <span className="text-sm md:text-base leading-none">{ab.icon}</span>
-                <span className="uppercase tracking-widest">{ab.name}</span>
-                <span className={`text-[5px] ${hydraEnergy < ab.energyCost ? 'text-red-400' : 'text-blue-300'}`}>
-                  {ab.energyCost} EP
-                </span>
-              </div>
-              {cd > 0 && (
-                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-sm">
-                  <span className="text-game-teal animate-pulse">{(cd / 1000).toFixed(1)}s</span>
+      {/* Log and Abilities Footer */}
+      <div className="mt-auto">
+        <div className="bg-black/60 border-2 border-game-teal/30 p-2 rounded mb-4 min-h-[50px]">
+          {log.slice(-3).map((m, i) => (
+            <div key={i} className={`font-pixel text-[6px] md:text-[8px] ${i === 2 ? 'text-white' : 'text-white/40'}`}>
+              {m}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {ABILITIES.map((ab, i) => {
+            const cd = cooldowns[ab.id] || 0;
+            const disabled = cd > 0 || hydraEnergy < ab.energyCost || battleOverRef.current;
+            return (
+              <button
+                key={ab.id}
+                onClick={() => useAbility(i)}
+                disabled={disabled}
+                className={`relative font-pixel text-[6px] md:text-[7px] p-3 rounded border-2 transition-all ${
+                  disabled 
+                    ? 'bg-gray-800/50 border-gray-700 text-gray-600 cursor-not-allowed' 
+                    : 'bg-background border-game-purple/50 text-white hover:border-game-purple hover:shadow-[0_0_15px_rgba(29,111,232,0.3)] active:scale-95'
+                }`}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[10px] md:text-[12px]">{ab.icon}</span>
+                  <span>{ab.name}</span>
+                  <span className="text-blue-400">{ab.energyCost} EP</span>
                 </div>
-              )}
-            </button>
-          );
-        })}
+                {cd > 0 && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-[10px] text-yellow-400">
+                    {(cd / 1000).toFixed(1)}s
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
