@@ -16,7 +16,7 @@ type Action =
   | { type: 'START_GAME' }
   | { type: 'WIN_BATTLE'; tokens: number; score: number }
   | { type: 'LOSE_GAME' }
-  | { type: 'NEXT__BATTLE' }
+  | { type: 'NEXT_BATTLE' }
   | { type: 'HEAL_FULL' }
   | { type: 'PURCHASE'; itemId: string; isFree?: boolean }
   | { type: 'SYNC_TOKENS'; tokens: number }
@@ -51,12 +51,21 @@ function reducer(state: GameState, action: Action): GameState {
       };
     case 'LOSE_GAME':
       return { ...state, screen: 'defeat' };
-    case 'NEXT__BATTLE': {
+    case 'NEXT_BATTLE': {
       const next = state.currentBattle + 1;
       if (next >= ENEMIES.length) {
         return { ...state, screen: 'leaderboard' };
       }
-      return { ...state, currentBattle: next, screen: 'battle' };
+      return { 
+        ...state, 
+        currentBattle: next, 
+        screen: 'battle',
+        hydra: {
+          ...state.hydra,
+          hp: state.hydra.maxHp,
+          energy: state.hydra.maxEnergy
+        }
+      };
     }
     case 'HEAL_FULL':
       return {
@@ -73,8 +82,8 @@ function reducer(state: GameState, action: Action): GameState {
       
       const count = state.purchases[action.itemId] || 0;
       if (count >= item.maxPurchases) return state;
-      if (!action.isFree && state.tokens < item.cost) return state;
-
+      // Note: Balance check is now done in Index.tsx or Shop component using wallet balance
+      
       const h = { ...state.hydra, headPower: [...state.hydra.headPower] as [number, number, number] };
       if (action.itemId.startsWith('head-')) {
         h.headPower[parseInt(action.itemId.split('-')[1])] += 10;
@@ -85,10 +94,11 @@ function reducer(state: GameState, action: Action): GameState {
         h.maxEnergy += 15;
         h.energy += 15;
       }
-
+      
       return {
         ...state,
         hydra: h,
+        // If isFree is true, it means we handled tokens via wallet transaction already
         tokens: action.isFree ? state.tokens : state.tokens - item.cost,
         purchases: { ...state.purchases, [action.itemId]: count + 1 },
       };
@@ -112,8 +122,7 @@ export function useGameState() {
     winBattle: useCallback((tokens: number, score: number) => dispatch({ type: 'WIN_BATTLE', tokens, score }), []),
     loseGame: useCallback(() => dispatch({ type: 'LOSE_GAME' }), []),
     nextBattle: useCallback(() => {
-      dispatch({ type: 'HEAL_FULL' });
-      dispatch({ type: 'NEXT__BATTLE' });
+      dispatch({ type: 'NEXT_BATTLE' });
     }, []),
     purchase: useCallback((itemId: string, isFree = false) => dispatch({ type: 'PURCHASE', itemId, isFree }), []),
     syncTokens: useCallback((tokens: number) => dispatch({ type: 'SYNC_TOKENS', tokens }), []),
