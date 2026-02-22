@@ -21,9 +21,9 @@ const HydrToken = ({ size = 14 }: { size?: number }) => (
 const MuteButton = ({ muted, onToggle }: { muted: boolean; onToggle: () => void }) => (
   <button
     onClick={onToggle}
-    className="fixed bottom-4 right-4 z-50 font-pixel text-[8px] px-3 py-2 rounded border border-white/20 bg-black/60 text-white/60 hover:bg-white/10 transition-all"
+    className="fixed bottom-4 left-4 z-50 font-pixel text-[8px] px-3 py-2 rounded bg-black/60 text-white border border-white/20 hover:bg-white/10 transition-all shadow-lg"
   >
-    {muted ? '\uD83D\uDD07 OFF' : '\uD83D\uDD0A ON'}
+    {muted ? '🔇 OFF' : '🔊 ON'}
   </button>
 );
 
@@ -35,7 +35,6 @@ const Index = () => {
   const [hasName, setHasName] = useState(false);
   const [battleShopOpen, setBattleShopOpen] = useState(false);
   const { muted, toggleMute, playMode, stopAll, playSfx } = useGameAudio();
-  const cdReduction = state.purchases['cooldown'] || 0;
 
   const [lastWonBattle, setLastWonBattle] = useState(0);
   const currentEnemy = ENEMIES[Math.min(state.currentBattle, ENEMIES.length - 1)];
@@ -81,59 +80,69 @@ const Index = () => {
   const HYDR_TOKEN = 'resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh';
   const SHOP_ACCOUNT = 'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak';
 
-  const handlePurchase = async (id: string) => {
+  const handlePurchase = async (id: string, qty: number = 1) => {
     const item = SHOP_ITEMS.find(i => i.id === id);
     if (!item) return;
+
+    const totalCost = item.cost * qty;
+
     if (connected && accounts.length > 0) {
       try {
-        const manifest = `CALL_METHOD Address("${accounts[0].address}") "withdraw" Address("${HYDR_TOKEN}") Decimal("${item.cost}");
-TAKE_ALL_FROM_WORKTOP Address("${HYDR_TOKEN}") Bucket("bucket1");
-CALL_METHOD Address("${SHOP_ACCOUNT}") "deposit" Bucket("bucket1");
-`;
-        const result = await sendTransaction(manifest, `Buy: ${item.name} (${item.cost} HYDR)`);
+        const manifest = `
+CALL_METHOD
+    Address("${accounts[0].address}")
+    "withdraw"
+    Address("${HYDR_TOKEN}")
+    Decimal("${totalCost}");
+TAKE_ALL_FROM_WORKTOP
+    Address("${HYDR_TOKEN}")
+    Bucket("bucket1");
+CALL_METHOD
+    Address("${SHOP_ACCOUNT}")
+    "deposit"
+    Bucket("bucket1");
+        `;
+        const result = await sendTransaction(manifest, `Buy: ${qty}x ${item.name} (${totalCost} HYDR)`);
         if (result && result.isErr && result.isErr()) {
           console.error('Transaction failed:', result.error);
           return;
         }
         playSfx('buy');
-        purchase(id, true);
+        purchase(id, qty, true);
       } catch (err) {
         console.error('Purchase error:', err);
       }
     } else {
       playSfx('buy');
-      purchase(id);
+      purchase(id, qty);
     }
   };
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden bg-game-dark">
+    <div className="min-h-screen bg-game-dark overflow-hidden selection:bg-game-purple/30">
       <StarryBackground />
       <MuteButton muted={muted} onToggle={toggleMute} />
-
+      
       {/* Radix Connect Button */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 scale-75 origin-top-right md:scale-100">
         <RadixConnectButton />
       </div>
 
       <AnimatePresence mode="wait">
         {!hasName && (
-          <NameEntry key="name" onConfirm={handleNameConfirm} />
+          <NameEntry onConfirm={handleNameConfirm} />
         )}
 
         {hasName && state.screen === 'start' && (
-          <StartScreen
-            key="start"
-            playerName={playerName}
-            tokens={state.tokens}
-            onStart={startGame}
+          <StartScreen 
+            onStart={startGame} 
             onShop={() => goShop('start')}
             onLeaderboard={() => setScreen('leaderboard')}
           />
         )}
 
         {hasName && state.screen === 'battle' && (
-          <div key="battle" className="relative">
+          <div className="relative w-full h-screen">
             <button
               onClick={() => setBattleShopOpen(true)}
               className="fixed bottom-16 right-4 z-40 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-yellow-400/70 bg-black/70 text-yellow-400 hover:bg-yellow-400/20 transition-all shadow-lg"
@@ -141,50 +150,53 @@ CALL_METHOD Address("${SHOP_ACCOUNT}") "deposit" Bucket("bucket1");
               SHOP
             </button>
             {battleShopOpen && (
-              <>
+              <div className="fixed inset-0 z-50 bg-game-dark">
                 <button
                   onClick={() => setBattleShopOpen(false)}
                   className="fixed top-4 left-4 z-60 font-pixel text-[10px] text-game-teal hover:text-game-teal/80 bg-black/60 px-3 py-2 rounded border border-game-teal/40"
                 >
-                  BACK
+                  ← BACK
                 </button>
-                <Shop
+                <Shop 
+                  tokens={state.tokens} 
+                  purchases={state.purchases} 
                   hydra={state.hydra}
-                  purchases={state.purchases}
-                  tokens={state.tokens}
                   onPurchase={handlePurchase}
-                  onBack={() => setBattleShopOpen(false)}
+                  onBack={() => setBattleShopOpen(false)} 
                 />
-              </>
+              </div>
             )}
             {!battleShopOpen && (
-              <BattleArena
-                hydra={state.hydra}
-                battleIndex={state.currentBattle}
-                cooldownReduction={cdReduction}
+              <BattleArena 
+                hydra={state.hydra} 
+                enemy={currentEnemy} 
                 onWin={handleWinBattle}
                 onLose={handleLose}
+                cdReduction={state.purchases['cooldown'] || 0}
               />
             )}
           </div>
         )}
 
         {hasName && state.screen === 'victory' && (
-          <motion.div
-            key="victory"
-            initial={{ opacity: 0, scale: 0.8 }}
+          <motion.div 
+            className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 text-center"
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 flex items-center justify-center z-50"
           >
-            <div className="text-center p-8 rounded-2xl border-2 border-game-teal/50 bg-black/90 max-w-sm w-full mx-4 shadow-2xl">
-              <div className="text-5xl mb-4">🏆</div>
-              <h2 className="font-pixel text-2xl text-game-teal mb-2">VICTORY!</h2>
-              <p className="font-pixel text-[10px] text-white/70 mb-4">{victoryEnemy.name} Defeated!</p>
-              <p className="font-pixel text-sm text-yellow-400 mb-6">+{victoryEnemy.tokenReward} HYDR</p>
+            <div className="font-pixel text-[24px] text-game-teal mb-2">🏆</div>
+            <div className="font-pixel text-[18px] text-game-teal mb-4 uppercase">VICTORY!</div>
+            <div className="w-full max-w-[200px] border-b-2 border-white/10 mb-6" />
+            
+            <div className="font-pixel text-[11px] text-white mb-2">{victoryEnemy.name} Defeated!</div>
+            <div className="font-pixel text-[14px] text-yellow-400 mb-8 flex items-center gap-2 justify-center">
+              <HydrToken size={16} /> +{victoryEnemy.tokenReward} HYDR
+            </div>
+
+            <div className="w-full max-w-[240px] flex flex-col gap-3">
               <button
                 onClick={isLastBattle ? () => setScreen('leaderboard') : nextBattle}
-                className="font-pixel text-[10px] py-4 px-8 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full mb-3"
+                className="font-pixel text-[10px] py-4 px-8 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full"
               >
                 {isLastBattle ? 'VIEW RESULTS' : 'NEXT BATTLE'}
               </button>
@@ -199,20 +211,23 @@ CALL_METHOD Address("${SHOP_ACCOUNT}") "deposit" Bucket("bucket1");
         )}
 
         {hasName && state.screen === 'defeat' && (
-          <motion.div
-            key="defeat"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 flex items-center justify-center z-50"
+          <motion.div 
+            className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           >
-            <div className="text-center p-8 rounded-2xl border-2 border-red-500/50 bg-black/90 max-w-sm w-full mx-4 shadow-2xl">
-              <div className="text-5xl mb-4">💀</div>
-              <h2 className="font-pixel text-2xl text-red-400 mb-2">DEFEATED!</h2>
-              <p className="font-pixel text-[10px] text-white/60 mb-6">Your Hydra has fallen in battle...</p>
+            <div className="font-pixel text-[24px] text-red-500 mb-2">💀</div>
+            <div className="font-pixel text-[18px] text-red-500 mb-4 uppercase">DEFEATED!</div>
+            <div className="w-full max-w-[200px] border-b-2 border-white/10 mb-6" />
+            
+            <p className="font-pixel text-[9px] text-white/70 mb-8 leading-relaxed">
+              Your Hydra has fallen in battle...<br/>The mempool can be cruel.
+            </p>
+
+            <div className="w-full max-w-[240px] flex flex-col gap-3">
               <button
-                onClick={() => startGame()}
-                className="font-pixel text-[10px] py-4 px-8 bg-red-600 text-white rounded border-b-4 border-red-900 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full mb-3"
+                onClick={startGame}
+                className="font-pixel text-[10px] py-4 px-8 bg-red-600 text-white rounded border-b-4 border-red-900 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full"
               >
                 TRY AGAIN
               </button>
@@ -227,24 +242,17 @@ CALL_METHOD Address("${SHOP_ACCOUNT}") "deposit" Bucket("bucket1");
         )}
 
         {hasName && state.screen === 'shop' && (
-          <Shop
-            key="shop"
+          <Shop 
+            tokens={state.tokens} 
+            purchases={state.purchases} 
             hydra={state.hydra}
-            purchases={state.purchases}
-            tokens={state.tokens}
             onPurchase={handlePurchase}
-            onBack={() => setScreen(shopReturn)}
+            onBack={() => setScreen(shopReturn)} 
           />
         )}
 
         {hasName && state.screen === 'leaderboard' && (
-          <Leaderboard
-            key="leaderboard"
-            playerName={playerName}
-            score={state.score}
-            tokens={state.tokens}
-            onBack={() => setScreen('start')}
-          />
+          <Leaderboard onBack={() => setScreen('start')} />
         )}
       </AnimatePresence>
     </div>
