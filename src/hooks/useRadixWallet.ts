@@ -29,8 +29,7 @@ export const initRdt = (): ReturnType<typeof RadixDappToolkit> | null => {
   if (rdtInstance) return rdtInstance;
   try {
     rdtInstance = RadixDappToolkit({
-      dAppDefinitionAddress:
-        'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak',
+      dAppDefinitionAddress: 'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak',
       networkId: RadixNetwork.Stokenet,
       applicationName: 'BattleArena',
       applicationVersion: '1.0.0',
@@ -55,14 +54,26 @@ export const useRadixWallet = () => {
 
   const fetchBalance = useCallback(async (address: string) => {
     try {
+      // Usando o endpoint correto e tratando a estrutura de resposta do Gateway API
       const response = await fetch(`https://stokenet.radixdlt.com/state/entity/details`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addresses: [address] }),
+        body: JSON.stringify({ 
+          addresses: [address],
+          aggregation_level: 'Global'
+        }),
       });
+      
+      if (!response.ok) return 0;
+      
       const data = await response.json();
-      const fungibleResources = data.items[0]?.fungible_resources?.items || [];
+      const accountData = data.items?.find((item: any) => item.address === address);
+      
+      // No Babylon Gateway, os recursos fungíveis ficam em fungible_resources.items
+      const fungibleResources = accountData?.fungible_resources?.items || [];
       const hydrResource = fungibleResources.find((r: any) => r.resource_address === HYDR_TOKEN);
+      
+      // O valor vem como string "amount"
       return hydrResource ? parseFloat(hydrResource.amount) : 0;
     } catch (e) {
       console.error('Fetch balance error:', e);
@@ -75,13 +86,15 @@ export const useRadixWallet = () => {
     try {
       const rdt = initRdt();
       if (!rdt) return;
+
       subscription = rdt.walletApi.walletData$.subscribe(async (walletData) => {
         try {
-          const accounts = walletData?.accounts ?? [];
+          const accounts = (walletData?.accounts as RadixAccount[]) ?? [];
           let balance = 0;
           if (accounts.length > 0) {
             balance = await fetchBalance(accounts[0].address);
           }
+          
           setState({
             connected: !!(accounts.length),
             accounts,
@@ -96,8 +109,11 @@ export const useRadixWallet = () => {
     } catch (e) {
       console.warn('useRadixWallet effect error:', e);
     }
+
     return () => {
-      try { subscription?.unsubscribe(); } catch (_) {}
+      try {
+        subscription?.unsubscribe();
+      } catch (_) {}
     };
   }, [fetchBalance]);
 
@@ -109,7 +125,11 @@ export const useRadixWallet = () => {
   const disconnect = useCallback(async () => {
     const rdt = getRdt();
     if (!rdt) return;
-    try { rdt.disconnect(); } catch (e) { console.warn('disconnect error:', e); }
+    try {
+      rdt.disconnect();
+    } catch (e) {
+      console.warn('disconnect error:', e);
+    }
   }, []);
 
   const sendTransaction = useCallback(async (
@@ -118,17 +138,22 @@ export const useRadixWallet = () => {
   ) => {
     const rdt = getRdt();
     if (!rdt) return { isErr: () => true as const, error: 'RDT not initialized' };
+
     try {
       const result = await rdt.walletApi.sendTransaction({
         transactionManifest,
         version: 1,
         message,
       });
-      // Proactively refresh balance after tx
+
+      // Atualiza o saldo após a transação se tiver sucesso
       if (!result.isErr() && state.accounts.length > 0) {
-        const newBalance = await fetchBalance(state.accounts[0].address);
-        setState(s => ({ ...s, tokenBalance: newBalance }));
+        setTimeout(async () => {
+          const newBalance = await fetchBalance(state.accounts[0].address);
+          setState(s => ({ ...s, tokenBalance: newBalance }));
+        }, 2000); // Aguarda um pouco o indexador
       }
+
       return result;
     } catch (e) {
       return { isErr: () => true as const, error: String(e) };
