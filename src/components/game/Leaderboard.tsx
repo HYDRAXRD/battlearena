@@ -1,13 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import hydrToken from '@/assets/hydr-token.png';
+
+const HydrToken = ({ size = 14 }: { size?: number }) => (
+  <img src={hydrToken} alt="HYDR" style={{ width: size, height: size, display: 'inline-block', verticalAlign: 'middle', imageRendering: 'pixelated' }} />
+);
 
 interface Props {
   playerName: string;
-  playerScore: number;
+  totalScore: number;
+  totalTokens: number;
   onBack: () => void;
 }
 
-const Leaderboard: React.FC<Props> = ({ playerName, playerScore, onBack }) => {
+const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onBack }) => {
   const trophies = ['🥇', '🥈', '🥉'];
 
   return (
@@ -25,20 +31,48 @@ const Leaderboard: React.FC<Props> = ({ playerName, playerScore, onBack }) => {
               <div>
                 <div className="font-pixel text-[9px] text-game-teal">{playerName}</div>
                 <div className="font-pixel text-[6px] text-muted-foreground mt-1">
-                  {playerScore > 0 ? 'YOUR SCORE' : 'NO BATTLES WON YET'}
+                  {totalScore > 0 ? 'YOUR SCORE' : 'NO BATTLES WON YET'}
                 </div>
               </div>
             </div>
-            <span className="font-pixel text-sm text-yellow-400">{playerScore}</span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="font-pixel text-sm text-yellow-400">{totalScore}</span>
+              {totalTokens > 0 && (
+                <span className="font-pixel text-[8px] text-yellow-300 flex items-center gap-1">
+                  <HydrToken size={10} /> {totalTokens} HYDR
+                </span>
+              )}
+            </div>
           </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <div className="text-4xl mb-4">🎮</div>
+            <div className="text-4xl mb-4">🏆</div>
             <p className="font-pixel text-[8px] text-muted-foreground">No scores yet.</p>
             <p className="font-pixel text-[8px] text-muted-foreground mt-2">Register your name and play to see your score!</p>
+          </motion.div>
+        )}
+
+        {totalScore > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="mt-6 p-4 rounded border border-game-purple/30 bg-game-purple/5"
+          >
+            <h2 className="font-pixel text-[8px] text-game-purple text-center mb-4">BATTLE SUMMARY</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="font-pixel text-[7px] text-white/60">TOTAL SCORE</span>
+                <span className="font-pixel text-[9px] text-yellow-400">{totalScore}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-pixel text-[7px] text-white/60">HYDR EARNED</span>
+                <span className="font-pixel text-[9px] text-yellow-300 flex items-center gap-1">
+                  <HydrToken size={10} /> {totalTokens}
+                </span>
+              </div>
+            </div>
           </motion.div>
         )}
       </div>
