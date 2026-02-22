@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HydraStats, DamagePopup } from '@/game/types';
+import { HydraStats } from '@/game/types';
+import type { DamagePopup } from '@/game/types';
 import { ENEMIES, ABILITIES, PIXEL_PALETTE, CHARACTER_ART } from '@/game/constants';
 import { useGameAudio } from '@/hooks/useGameAudio';
 import hydraBattle from '@/assets/hydra-battle.png';
