@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGameState } from '@/game/useGameState';
 import { ENEMIES, SHOP_ITEMS } from '@/game/constants';
@@ -34,7 +34,7 @@ const MuteButton = ({ muted, onToggle }: { muted: boolean; onToggle: () => void 
 
 const Index = () => {
   const { state, setScreen, startGame, winBattle, nextBattle, purchase, loseGame, resetGame } = useGameState();
-  const { connected, accounts, sendTransaction } = useRadixWallet();
+  const { connected, accounts, sendTransaction, tokenBalance } = useRadixWallet();
   const [shopReturn, setShopReturn] = useState<GameScreen>('start');
   const [playerName, setPlayerName] = useState('');
   const [hasName, setHasName] = useState(false);
@@ -42,8 +42,12 @@ const Index = () => {
   const { muted, toggleMute, playMode, stopAll, playSfx } = useGameAudio();
 
   const cdReduction = state.purchases['cooldown'] || 0;
+
+  // Track the current enemy for the victory screen (captured at win time)
+  const [lastWonBattle, setLastWonBattle] = useState(0);
   const currentEnemy = ENEMIES[Math.min(state.currentBattle, ENEMIES.length - 1)];
-  const isLastBattle = state.currentBattle >= ENEMIES.length - 1;
+  const victoryEnemy = ENEMIES[Math.min(lastWonBattle, ENEMIES.length - 1)];
+  const isLastBattle = lastWonBattle >= ENEMIES.length - 1;
 
   useEffect(() => {
     if (state.screen === 'battle') {
@@ -69,16 +73,17 @@ const Index = () => {
     setHasName(true);
   };
 
-  const handleWinBattle = (t: number, s: number) => {
+  const handleWinBattle = useCallback((t: number, s: number) => {
+    setLastWonBattle(state.currentBattle);
     playSfx('win');
     winBattle(t, s);
-  };
+  }, [state.currentBattle, playSfx, winBattle]);
 
-  const handleLose = () => {
+  const handleLose = useCallback(() => {
     playSfx('lose');
     stopAll();
     loseGame();
-  };
+  }, [playSfx, stopAll, loseGame]);
 
   const HYDR_TOKEN = 'resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh';
   const SHOP_ACCOUNT = 'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak';
@@ -86,6 +91,7 @@ const Index = () => {
   const handlePurchase = async (id: string) => {
     const item = SHOP_ITEMS.find(i => i.id === id);
     if (!item) return;
+
     if (connected && accounts.length > 0) {
       try {
         const manifest = `CALL_METHOD
@@ -102,7 +108,7 @@ CALL_METHOD
   Bucket("bucket1");
 `;
         const result = await sendTransaction(manifest, `Buy: ${item.name} (${item.cost} HYDR)`);
-        if (result.isErr()) {
+        if (result && result.isErr && result.isErr()) {
           console.error('Transaction failed:', result.error);
           return;
         }
@@ -118,48 +124,54 @@ CALL_METHOD
   };
 
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen w-full bg-background overflow-hidden relative">
       <StarryBackground />
+      
+      {/* Radix Connect Button - top right */}
       <div className="fixed top-4 right-4 z-50">
         <RadixConnectButton />
       </div>
+
       <MuteButton muted={muted} onToggle={toggleMute} />
+
       <AnimatePresence mode="wait">
         {!hasName && (
-          <NameEntry key="name" onConfirm={handleNameConfirm} />
+          <motion.div key="nameentry" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-20 flex items-center justify-center">
+            <NameEntry onConfirm={handleNameConfirm} />
+          </motion.div>
         )}
+
         {hasName && state.screen === 'start' && (
-          <StartScreen
-            key="start"
-            playerName={playerName}
-            hydra={state.hydra}
-            tokens={state.tokens}
-            score={state.totalScore}
-            onStart={startGame}
-            onShop={() => goShop('start')}
-            onLeaderboard={() => setScreen('leaderboard')}
-          />
+          <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-20">
+            <StartScreen
+              playerName={playerName}
+              onStart={startGame}
+              onShop={() => goShop('start')}
+              onLeaderboard={() => setScreen('leaderboard')}
+            />
+          </motion.div>
         )}
+
         {hasName && state.screen === 'battle' && (
-          <div key="battle" className="relative min-h-screen">
-            {/* Botao Shop durante batalha */}
+          <motion.div key={`battle-${state.currentBattle}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-20 flex items-center justify-center p-4">
+            {/* Shop button during battle */}
             <button
               onClick={() => setBattleShopOpen(true)}
               className="fixed bottom-16 right-4 z-40 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-yellow-400/70 bg-black/70 text-yellow-400 hover:bg-yellow-400/20 hover:border-yellow-400 transition-all shadow-lg animate-pulse"
             >
-              \uD83D\uDED2 SHOP
+              🛒 SHOP
             </button>
-            {/* Shop overlay durante batalha */}
+
+            {/* Shop overlay during battle */}
             {battleShopOpen && (
-              <div className="fixed inset-0 z-50 bg-black/80 flex flex-col">
+              <div className="fixed inset-0 z-50 bg-black/90 overflow-y-auto">
                 <button
                   onClick={() => setBattleShopOpen(false)}
                   className="fixed top-4 left-4 z-60 font-pixel text-[10px] text-game-teal hover:text-game-teal/80 bg-black/60 px-3 py-2 rounded border border-game-teal/40"
                 >
-                  \u2190 VOLTAR A BATALHA
+                  ← VOLTAR A BATALHA
                 </button>
                 <Shop
-                  key="battle-shop"
                   tokens={state.tokens}
                   purchases={state.purchases}
                   hydra={state.hydra}
@@ -168,6 +180,7 @@ CALL_METHOD
                 />
               </div>
             )}
+
             <BattleArena
               hydra={state.hydra}
               battleIndex={state.currentBattle}
@@ -175,76 +188,82 @@ CALL_METHOD
               onWin={handleWinBattle}
               onLose={handleLose}
             />
-          </div>
+          </motion.div>
         )}
+
         {hasName && state.screen === 'victory' && (
-          <motion.div
-            key="victory"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center min-h-screen gap-6 px-4"
-          >
-            <div className="text-6xl">\uD83C\uDF89</div>
-            <h1 className="font-pixel text-2xl text-game-teal">VICTORY!</h1>
-            <p className="font-pixel text-[8px] text-white/60">Enemy Defeated!</p>
-            <div className="font-pixel text-[10px] text-yellow-400 flex items-center gap-1">
-              +{currentEnemy.tokenReward} <HydrToken size={12} />
+          <motion.div key="victory" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-20 flex items-center justify-center">
+            <div className="text-center font-pixel space-y-6 p-8 bg-black/80 rounded-2xl border border-game-teal/30 max-w-sm mx-auto">
+              <div className="text-4xl animate-bounce">🎉</div>
+              <h2 className="text-xl text-game-teal">VICTORY!</h2>
+              <p className="text-white/70 text-[9px]">Enemy Defeated!</p>
+              <div className="flex items-center justify-center gap-2 text-yellow-400 text-[10px]">
+                <HydrToken size={16} />
+                <span>+{victoryEnemy.tokenReward}</span>
+              </div>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={isLastBattle ? () => setScreen('leaderboard') : nextBattle}
+                  className="font-pixel text-[10px] md:text-sm py-4 px-8 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
+                >
+                  {isLastBattle ? '🏆 VIEW RESULTS' : '▶ NEXT BATTLE'}
+                </button>
+                <button
+                  onClick={() => goShop('victory')}
+                  className="font-pixel text-[8px] py-3 px-6 bg-transparent text-game-teal rounded border-2 border-game-teal/50 hover:bg-game-teal/10 transition-all"
+                >
+                  🛙 SHOP
+                </button>
+              </div>
             </div>
-            <button
-              onClick={isLastBattle ? () => setScreen('leaderboard') : nextBattle}
-              className="font-pixel text-[10px] md:text-sm py-4 px-8 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
-            >
-              {isLastBattle ? '\uD83C\uDFC6 VIEW RESULTS' : '\u25BA NEXT BATTLE'}
-            </button>
-            <button
-              onClick={() => goShop('victory')}
-              className="font-pixel text-[8px] py-3 px-6 bg-transparent text-game-teal rounded border-2 border-game-teal/50 hover:bg-game-teal/10 transition-all"
-            >
-              \uD83D\uDED9 SHOP
-            </button>
           </motion.div>
         )}
+
         {hasName && state.screen === 'defeat' && (
-          <motion.div
-            key="defeat"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center min-h-screen gap-6 px-4"
-          >
-            <div className="text-6xl">\uD83D\uDC80</div>
-            <h1 className="font-pixel text-2xl text-red-500">DEFEATED!</h1>
-            <p className="font-pixel text-[8px] text-white/60">Your Hydra has fallen in battle...</p>
-            <button
-              onClick={() => startGame()}
-              className="font-pixel text-[10px] py-4 px-8 bg-red-600 text-white rounded border-b-4 border-red-900 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
-            >
-              \uD83D\uDD04 TRY AGAIN
-            </button>
-            <button
-              onClick={() => { resetGame(); setScreen('start'); }}
-              className="font-pixel text-[8px] py-3 px-6 bg-transparent text-white/60 rounded border-2 border-white/20 hover:bg-white/10 transition-all"
-            >
-              \uD83C\uDFE0 MAIN MENU
-            </button>
+          <motion.div key="defeat" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-20 flex items-center justify-center">
+            <div className="text-center font-pixel space-y-6 p-8 bg-black/80 rounded-2xl border border-red-500/30 max-w-sm mx-auto">
+              <div className="text-4xl">💀</div>
+              <h2 className="text-xl text-red-500">DEFEATED!</h2>
+              <p className="text-white/60 text-[9px]">Your Hydra has fallen in battle...</p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => startGame()}
+                  className="font-pixel text-[10px] py-4 px-8 bg-red-600 text-white rounded border-b-4 border-red-900 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all"
+                >
+                  🔄 TRY AGAIN
+                </button>
+                <button
+                  onClick={() => { resetGame(); setScreen('start'); }}
+                  className="font-pixel text-[8px] py-3 px-6 bg-transparent text-white/60 rounded border-2 border-white/20 hover:bg-white/10 transition-all"
+                >
+                  🏠 MAIN MENU
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
+
         {hasName && state.screen === 'shop' && (
-          <Shop
-            key="shop"
-            tokens={state.tokens}
-            purchases={state.purchases}
-            hydra={state.hydra}
-            onPurchase={handlePurchase}
-            onBack={() => setScreen(shopReturn)}
-          />
+          <motion.div key="shop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-20">
+            <Shop
+              tokens={state.tokens}
+              purchases={state.purchases}
+              hydra={state.hydra}
+              onPurchase={handlePurchase}
+              onBack={() => setScreen(shopReturn)}
+            />
+          </motion.div>
         )}
+
         {hasName && state.screen === 'leaderboard' && (
-          <Leaderboard
-            key="leaderboard"
-            playerName={playerName}
-            playerScore={state.totalScore}
-            onBack={() => setScreen('start')}
-          />
+          <motion.div key="leaderboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-20">
+            <Leaderboard
+              playerName={playerName}
+              totalScore={state.totalScore}
+              totalTokens={state.tokens}
+              onBack={() => setScreen('start')}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
