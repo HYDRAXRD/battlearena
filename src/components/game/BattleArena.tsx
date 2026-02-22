@@ -37,7 +37,7 @@ const ENEMY_IMAGES: Record<string, string> = {
 };
 
 const PixelArt = ({ art, size = 8 }: { art: string[], size?: number }) => {
-  if (!art || !art.length) return <div className=\"text-4xl\">👾</div>;
+  if (!art || !art.length) return <div className='text-4xl'>👾</div>;
   const cols = art[0]?.length || 1;
   return (
     <div 
@@ -220,62 +220,60 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const enemyArt = CHARACTER_ART[enemy.id];
 
   return (
-    <div className=\"flex flex-col items-center w-full max-w-4xl mx-auto p-4 space-y-4\">
-      {/* Header */}
-      <div className=\"flex justify-between items-center w-full px-2\">
-        <div className=\"flex flex-col items-start space-y-1 w-1/3\">
-          <span className=\"text-xs md:text-sm font-pixel text-white\">Hydra</span>
-          <div className=\"w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden\">
+    <div className='flex flex-col items-center w-full max-w-4xl mx-auto p-4 space-y-4'>
+      <div className='flex justify-between items-center w-full px-2'>
+        <div className='flex flex-col items-start space-y-1 w-1/3'>
+          <span className='text-xs md:text-sm font-pixel text-white'>Hydra</span>
+          <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden'>
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${hpPct}%` }}
-              className=\"h-full bg-gradient-to-r from-game-red to-game-purple\"
+              className='h-full bg-gradient-to-r from-game-red to-game-purple'
             />
           </div>
-          <span className=\"text-[10px] md:text-xs font-pixel text-white\">
+          <span className='text-[10px] md:text-xs font-pixel text-white'>
             {Math.max(0, Math.floor(hydraHp))}/{hydra.maxHp} HP
           </span>
-          <div className=\"w-full h-1.5 md:h-2 bg-gray-800 rounded-full overflow-hidden\">
+          <div className='w-full h-1.5 md:h-2 bg-gray-800 rounded-full overflow-hidden'>
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${epPct}%` }}
-              className=\"h-full bg-game-blue\"
+              className='h-full bg-game-blue'
             />
           </div>
         </div>
 
-        <div className=\"flex flex-col items-center w-1/3\">
-          <div className=\"text-lg md:text-2xl font-pixel text-white\">VS</div>
-          <div className=\"text-[10px] md:text-xs font-pixel text-game-purple bg-black/50 px-2 py-1 rounded\">
+        <div className='flex flex-col items-center w-1/3'>
+          <div className='text-lg md:text-2xl font-pixel text-white'>VS</div>
+          <div className='text-[10px] md:text-xs font-pixel text-game-purple bg-black/50 px-2 py-1 rounded'>
             BATTLE {battleIndex + 1}/{ENEMIES.length}
           </div>
         </div>
 
-        <div className=\"flex flex-col items-end space-y-1 w-1/3\">
-          <span className=\"text-xs md:text-sm font-pixel text-white\">{enemy.name}</span>
-          <div className=\"w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden\">
+        <div className='flex flex-col items-end space-y-1 w-1/3'>
+          <span className='text-xs md:text-sm font-pixel text-white'>{enemy.name}</span>
+          <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden'>
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${eHpPct}%` }}
-              className=\"h-full bg-game-red\"
+              className='h-full bg-game-red'
             />
           </div>
-          <span className=\"text-[10px] md:text-xs font-pixel text-white\">
+          <span className='text-[10px] md:text-xs font-pixel text-white'>
             {Math.max(0, Math.floor(enemyHp))}/{enemy.maxHp} HP
           </span>
-          <span className=\"text-[8px] md:text-[10px] font-pixel text-gray-400\">{enemy.subtitle}</span>
+          <span className='text-[8px] md:text-[10px] font-pixel text-gray-400'>{enemy.subtitle}</span>
         </div>
       </div>
 
-      {/* Battle Scene */}
-      <div className=\"relative w-full aspect-video bg-black/40 rounded-lg border-2 border-game-purple/30 flex items-center justify-around overflow-hidden\">
+      <div className='relative w-full aspect-video bg-black/40 rounded-lg border-2 border-game-purple/30 flex items-center justify-around overflow-hidden'>
         {popups.map(p => (
           <motion.div
             key={p.id}
             initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 0, y: -100 }}
             transition={{ duration: 0.8 }}
-            className={`absolute font-pixel text-xl md:text-3xl pointer-events-none z-50`}
+            className='absolute font-pixel text-xl md:text-3xl pointer-events-none z-50'
             style={{ left: `${p.x}%`, top: `${p.y}%`, color: p.isMiss ? '#9ca3af' : p.isHeal ? '#22c55e' : '#ef4444' }}
           >
             {p.isMiss ? 'MISS' : `${p.isHeal ? '+' : '-'}${p.value}`}
@@ -284,45 +282,43 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
 
         <motion.div 
           animate={shakeHydra ? { x: [-10, 10, -10, 10, 0] } : {}}
-          className=\"relative\"
+          className='relative'
         >
           <img 
             src={hydraBattle} 
-            alt=\"Hydra\" 
-            className=\"w-32 md:w-48 h-auto pixelated drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]\" 
+            alt='Hydra' 
+            className='w-32 md:w-48 h-auto pixelated drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]' 
           />
         </motion.div>
 
         <motion.div 
           animate={shakeEnemy ? { x: [10, -10, 10, -10, 0] } : {}}
-          className=\"relative flex flex-col items-center\"
+          className='relative flex flex-col items-center'
         >
           {enemyImg ? (
             <img 
               src={enemyImg} 
               alt={enemy.name} 
-              className=\"w-32 md:w-48 h-auto pixelated object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]\" 
+              className='w-32 md:w-48 h-auto pixelated object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
             />
           ) : enemyArt ? (
             <PixelArt art={enemyArt} size={6} />
           ) : (
-            <div className=\"text-6xl\">👾</div>
+            <div className='text-6xl'>👾</div>
           )}
         </motion.div>
       </div>
 
-      {/* Battle Log */}
-      <div className=\"w-full bg-black/60 border border-game-purple/50 rounded p-2 h-20 md:h-24 font-pixel overflow-hidden\">
-        <div className=\"text-[10px] text-game-purple mb-1 border-b border-game-purple/20\">BATTLE LOG</div>
+      <div className='w-full bg-black/60 border border-game-purple/50 rounded p-2 h-20 md:h-24 font-pixel overflow-hidden'>
+        <div className='text-[10px] text-game-purple mb-1 border-b border-game-purple/20'>BATTLE LOG</div>
         {log.slice(-3).map((m, i) => (
-          <div key={i} className=\"text-[10px] md:text-xs text-white/90 leading-tight\">
+          <div key={i} className='text-[10px] md:text-xs text-white/90 leading-tight'>
             {m}
           </div>
         ))}
       </div>
 
-      {/* Abilities */}
-      <div className=\"grid grid-cols-3 gap-2 md:gap-4 w-full\">
+      <div className='grid grid-cols-3 gap-2 md:gap-4 w-full'>
         {ABILITIES.map((ab, i) => {
           const cd = cooldowns[ab.id] || 0;
           const disabled = cd > 0 || hydraEnergy < ab.energyCost || battleOverRef.current;
@@ -338,16 +334,16 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
                   : 'bg-black/60 border-game-purple/50 text-white hover:border-game-purple hover:bg-game-purple/10 active:scale-95'
               }`}
             >
-              <div className=\"flex items-center space-x-1\">
-                <span className=\"text-sm md:text-base\">{ab.icon}</span>
-                <span className=\"text-[10px] md:text-xs font-pixel uppercase tracking-tighter\">{ab.name}</span>
+              <div className='flex items-center space-x-1'>
+                <span className='text-sm md:text-base'>{ab.icon}</span>
+                <span className='text-[10px] md:text-xs font-pixel uppercase tracking-tighter'>{ab.name}</span>
               </div>
-              <div className=\"text-[8px] md:text-[10px] font-pixel text-game-blue mt-0.5\">
+              <div className='text-[8px] md:text-[10px] font-pixel text-game-blue mt-0.5'>
                 ⚡ {ab.energyCost}
               </div>
               
               {cd > 0 && (
-                <div className=\"absolute inset-0 bg-black/60 flex items-center justify-center font-pixel text-xs text-white rounded-sm\">
+                <div className='absolute inset-0 bg-black/60 flex items-center justify-center font-pixel text-xs text-white rounded-sm'>
                   {(cd / 1000).toFixed(1)}s
                 </div>
               )}
