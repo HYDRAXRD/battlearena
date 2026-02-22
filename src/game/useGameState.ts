@@ -32,7 +32,7 @@ const initialState: GameState = {
 };
 
 // Helper: aplica os upgrades de purchases sobre o INITIAL_HYDRA
-// Usado para recalcular os stats base ao iniciar cada batalha
+// Usado para construir a hydra com upgrades ao iniciar cada batalha
 function buildHydraFromPurchases(purchases: Record<string, number>): HydraStats {
   const h: HydraStats = {
     ...INITIAL_HYDRA,
@@ -83,13 +83,14 @@ function reducer(state: GameState, action: Action): GameState {
       if (next >= ENEMIES.length) {
         return { ...state, screen: 'leaderboard' };
       }
-      // CONSUMO: ao passar de batalha, reseta hydra para INITIAL_HYDRA
-      // e zera purchases - os upgrades foram consumidos nessa batalha
+      // Aplica os upgrades comprados no shop para a proxima batalha
+      // Depois reseta purchases - os upgrades foram consumidos nessa batalha
+      const hydraWithUpgrades = buildHydraFromPurchases(state.purchases);
       return {
         ...state,
         currentBattle: next,
         screen: 'battle',
-        hydra: { ...INITIAL_HYDRA },
+        hydra: { ...hydraWithUpgrades },
         purchases: {},
       };
     }
@@ -109,12 +110,10 @@ function reducer(state: GameState, action: Action): GameState {
       if (!item) return state;
       const count = state.purchases[action.itemId] || 0;
       if (count >= item.maxPurchases) return state;
-
       const h: HydraStats = {
         ...state.hydra,
         headPower: [...state.hydra.headPower] as [number, number, number],
       };
-
       if (action.itemId.startsWith('head-')) {
         h.headPower[parseInt(action.itemId.split('-')[1])] += 10;
       } else if (action.itemId === 'max-hp') {
@@ -124,7 +123,6 @@ function reducer(state: GameState, action: Action): GameState {
         h.maxEnergy += 15;
         h.energy += 15;
       }
-
       return {
         ...state,
         hydra: h,
@@ -153,7 +151,9 @@ export function useGameState() {
     startGame: useCallback(() => dispatch({ type: 'START_GAME' }), []),
     winBattle: useCallback((tokens: number, score: number) => dispatch({ type: 'WIN_BATTLE', tokens, score }), []),
     loseGame: useCallback(() => dispatch({ type: 'LOSE_GAME' }), []),
-    nextBattle: useCallback(() => { dispatch({ type: 'NEXT_BATTLE' }); }, []),
+    nextBattle: useCallback(() => {
+      dispatch({ type: 'NEXT_BATTLE' });
+    }, []),
     purchase: useCallback((itemId: string, isFree = false) => dispatch({ type: 'PURCHASE', itemId, isFree }), []),
     syncTokens: useCallback((tokens: number) => dispatch({ type: 'SYNC_TOKENS', tokens }), []),
     resetGame: useCallback(() => dispatch({ type: 'RESET' }), []),
