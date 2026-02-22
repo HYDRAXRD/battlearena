@@ -110,7 +110,7 @@ const Shop: React.FC<Props> = ({ tokens, purchases, onPurchase, onBack }) => {
                 </div>
                 <div className="text-right">
                   <div className="font-pixel text-[8px] text-yellow-400 flex items-center gap-1 justify-end">
-                    <HydrToken size={10} />{item.cost} ea
+                    <HydrToken size={10} />{item.cost} HYDR
                   </div>
                   <div className="font-pixel text-[7px] text-white/40">{count}/{item.maxPurchases}</div>
                 </div>
