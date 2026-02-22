@@ -72,13 +72,15 @@ function reducer(state: GameState, action: Action): GameState {
         battleStartPurchases: {},
       };
 
-    case 'WIN_BATTLE':
+   case 'WIN_BATTLE': {
+      const earnedTokens = action.tokens ?? 0;
+      const earnedScore = action.score ?? 0;
+
       return {
         ...state,
-        tokens: state.tokens + action.tokens,
-        totalScore: state.totalScore + action.score,
+        tokens: state.tokens + earnedTokens,
+        totalScore: state.totalScore + earnedScore,
         screen: 'victory',
-        // reset purchases after battle - items were consumed in this battle
         purchases: {},
         battleStartPurchases: {},
         hydra: { ...INITIAL_HYDRA },
