@@ -125,7 +125,7 @@ CALL_METHOD Address("${SHOP_ACCOUNT}") "deposit" Bucket("bucket1");
           <StartScreen
             key="start"
             playerName={playerName}
-            tokenBalance={tokenBalance}
+            tokens={state.tokens}
             onStart={startGame}
             onShop={() => goShop('start')}
             onLeaderboard={() => setScreen('leaderboard')}
@@ -151,7 +151,7 @@ CALL_METHOD Address("${SHOP_ACCOUNT}") "deposit" Bucket("bucket1");
                 <Shop
                   hydra={state.hydra}
                   purchases={state.purchases}
-                  tokenBalance={tokenBalance}
+                  tokens={state.tokens}
                   onPurchase={handlePurchase}
                   onBack={() => setBattleShopOpen(false)}
                 />
@@ -231,7 +231,7 @@ CALL_METHOD Address("${SHOP_ACCOUNT}") "deposit" Bucket("bucket1");
             key="shop"
             hydra={state.hydra}
             purchases={state.purchases}
-            tokenBalance={tokenBalance}
+            tokens={state.tokens}
             onPurchase={handlePurchase}
             onBack={() => setScreen(shopReturn)}
           />
