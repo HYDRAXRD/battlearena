@@ -11,7 +11,7 @@ import wowoEnemy from '@/assets/wowo-enemy.PNG';
 import shibaEnemy from '@/assets/shiba-enemy.png';
 import bonkEnemy from '@/assets/bonk-enemy.PNG';
 import penguEnemy from '@/assets/pengu-enemy.PNG';
-import flokiEnemy from '@/assets/early.PNG';
+import earlyEnemy from '@/assets/early.PNG';
 import dogEnemy from '@/assets/dog-enemy.PNG';
 import trumpEnemy from '@/assets/trump-enemy.PNG';
 
@@ -31,7 +31,7 @@ const ENEMY_IMAGES: Record<string, string> = {
   shiba: shibaEnemy,
   bonk: bonkEnemy,
   pengu: penguEnemy,
-  floki: flokiEnemy,
+  early: earlyEnemy,
   dog: dogEnemy,
   trump: trumpEnemy,
 };
@@ -111,11 +111,15 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
     if (hydraHp <= 0) {
       battleOverRef.current = true;
       playSfx('lose');
-      setTimeout(() => onLose(), 800);
+      setTimeout(() => {
+        if (onLose) onLose();
+      }, 800);
     } else if (enemyHp <= 0) {
       battleOverRef.current = true;
       playSfx('win');
-      setTimeout(() => onWin(enemy.tokenReward, enemy.scoreValue), 800);
+      setTimeout(() => {
+        if (onWin) onWin(enemy.tokenReward, enemy.scoreValue);
+      }, 800);
     }
   }, [hydraHp, enemyHp, onWin, onLose, enemy, playSfx]);
 
@@ -128,7 +132,6 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         addLog(`${enemy.name} dodged!`);
         return;
       }
-
       const dmg = Math.max(1, hydra.attack - enemy.defense);
       setEnemyHp(p => Math.max(0, p - dmg));
       setShakeEnemy(true);
@@ -150,14 +153,12 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         addLog(`💥 ${enemy.name} PANIC SELL!`);
         playSfx('ability');
       }
-
       setHydraHp(p => Math.max(0, p - dmg));
       setShakeHydra(true);
       setTimeout(() => setShakeHydra(false), 200);
       addPopup(dmg, 'left');
       addLog(`${enemy.name} hits ${dmg}!`);
       playSfx('hit');
-
       if (enemy.healRate) {
         setEnemyHp(p => Math.min(enemy.maxHp, p + enemy.healRate!));
         addPopup(enemy.healRate, 'right', true);
@@ -192,22 +193,18 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
     if (battleOverRef.current) return;
     const ab = ABILITIES[i];
     if ((cooldowns[ab.id] || 0) > 0 || hydraEnergy < ab.energyCost) return;
-
     const dmg = Math.max(1, ab.baseDamage + hydra.headPower[ab.headIndex] - enemy.defense);
     const heal = ab.healAmount + (ab.headIndex === 2 ? hydra.headPower[2] : 0);
-
     setHydraEnergy(p => p - ab.energyCost);
     setEnemyHp(p => Math.max(0, p - dmg));
     setShakeEnemy(true);
     setTimeout(() => setShakeEnemy(false), 300);
     addPopup(dmg, 'right');
     playSfx('ability');
-
     if (heal > 0) {
       setHydraHp(p => Math.min(hydra.maxHp, p + heal));
       addPopup(heal, 'left', true);
     }
-
     setCooldowns(p => ({ ...p, [ab.id]: ab.cooldownMs - (cooldownReduction * 500) }));
     addLog(`⚡ ${ab.name} for ${dmg}!`);
   };
@@ -215,7 +212,6 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const hpPct = Math.max(0, (hydraHp / hydra.maxHp) * 100);
   const epPct = Math.max(0, (hydraEnergy / hydra.maxEnergy) * 100);
   const eHpPct = Math.max(0, (enemyHp / enemy.maxHp) * 100);
-
   const enemyImg = ENEMY_IMAGES[enemy.id];
   const enemyArt = CHARACTER_ART[enemy.id];
 
@@ -343,7 +339,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
               </div>
               
               {cd > 0 && (
-                <div className='absolute inset-0 bg-black/60 flex items-center justify-center font-pixel text-xs text-white rounded-sm'>
+                <div className='absolute inset-0 bg-blackFix: add null checks for onWin/onLose and rename floki to early to match assets/60 flex items-center justify-center font-pixel text-xs text-white rounded-sm'>
                   {(cd / 1000).toFixed(1)}s
                 </div>
               )}
