@@ -85,6 +85,7 @@ function reducer(state: GameState, action: Action): GameState {
         battleStartPurchases: {},
         hydra: { ...INITIAL_HYDRA },
       };
+    }
 
     case 'LOSE_GAME':
       return {

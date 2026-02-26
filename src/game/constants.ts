@@ -3,7 +3,7 @@ import { EnemyConfig, Ability, ShopItem, HydraStats } from './types';
 export const ENEMIES: EnemyConfig[] = [
   {
     id: 'doge',
-    name: 'Doge',Rename floki to early
+    name: 'Doge',
     subtitle: 'Much Wow, Very Attack',
     maxHp: 100,
     attack: 10,
