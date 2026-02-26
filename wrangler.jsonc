@@ -2,5 +2,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "battlearena",
   "compatibility_date": "2025-09-27",
-  "pages_build_output_dir": "./dist"
+  "pages_build_output_dir": "./dist",
+  "kv_namespaces": [
+    {
+      "binding": "BATTLE_ARENA_KV",
+      "id": "9eb8eabda844409f9c4bd8ce43920c10"
+    }
+  ]
 }

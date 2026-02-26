@@ -1,6 +1,7 @@
 export interface LeaderboardEntry {
   name: string;
   score: number;
+  tokens: number;
 }
 
 export const onRequestGet: PagesFunction<{ BATTLE_ARENA_KV: KVNamespace }> = async (context) => {
@@ -22,7 +23,7 @@ export const onRequestGet: PagesFunction<{ BATTLE_ARENA_KV: KVNamespace }> = asy
 export const onRequestPost: PagesFunction<{ BATTLE_ARENA_KV: KVNamespace }> = async (context) => {
   try {
     const entry: LeaderboardEntry = await context.request.json();
-    if (!entry.name || typeof entry.score !== 'number') {
+    if (!entry.name || typeof entry.score !== 'number' || entry.score < 0) {
       return new Response('Invalid data', { status: 400 });
     }
 
@@ -33,9 +34,10 @@ export const onRequestPost: PagesFunction<{ BATTLE_ARENA_KV: KVNamespace }> = as
     if (existingIndex > -1) {
       if (entry.score > leaderboard[existingIndex].score) {
         leaderboard[existingIndex].score = entry.score;
+        leaderboard[existingIndex].tokens = entry.tokens ?? 0;
       }
     } else {
-      leaderboard.push(entry);
+      leaderboard.push({ name: entry.name, score: entry.score, tokens: entry.tokens ?? 0 });
     }
 
     leaderboard.sort((a, b) => b.score - a.score);
