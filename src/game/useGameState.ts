@@ -95,6 +95,9 @@ function reducer(state: GameState, action: Action): GameState {
       };
 
     case 'NEXT_BATTLE': {
+      if (state.screen !== 'victory') {
+        return state;
+      }
       const next = state.currentBattle + 1;
       if (next >= ENEMIES.length) {
         return { ...state, screen: 'leaderboard' };

@@ -34,6 +34,7 @@ const Index = () => {
   const [playerName, setPlayerName] = useState('');
   const [hasName, setHasName] = useState(false);
   const [battleShopOpen, setBattleShopOpen] = useState(false);
+  const [isAdvancingBattle, setIsAdvancingBattle] = useState(false);
   const { muted, toggleMute, playMode, stopAll, playSfx } = useGameAudio();
 
   const [lastWonBattle, setLastWonBattle] = useState(0);
@@ -55,6 +56,18 @@ const Index = () => {
     if (hasName && state.screen === 'start') playMode('menu');
   }, [hasName, state.screen, playMode]);
 
+  useEffect(() => {
+    if (state.screen !== 'battle' && battleShopOpen) {
+      setBattleShopOpen(false);
+    }
+  }, [state.screen, battleShopOpen]);
+
+  useEffect(() => {
+    if (state.screen !== 'victory' && isAdvancingBattle) {
+      setIsAdvancingBattle(false);
+    }
+  }, [state.screen, isAdvancingBattle]);
+
   const goShop = (from: GameScreen) => {
     setShopReturn(from);
     setScreen('shop');
@@ -66,6 +79,7 @@ const Index = () => {
   };
 
   const handleWinBattle = useCallback((t: number, s: number) => {
+    setBattleShopOpen(false);
     setLastWonBattle(state.currentBattle);
     playSfx('win');
     winBattle(t, s);
@@ -76,6 +90,17 @@ const Index = () => {
     stopAll();
     loseGame();
   }, [playSfx, stopAll, loseGame]);
+
+  const handleNextBattle = useCallback(() => {
+    if (isLastBattle) {
+      setScreen('leaderboard');
+      return;
+    }
+    if (isAdvancingBattle) return;
+    setIsAdvancingBattle(true);
+    setBattleShopOpen(false);
+    nextBattle();
+  }, [isLastBattle, isAdvancingBattle, nextBattle, setScreen]);
 
   const HYDR_TOKEN = 'resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh';
   const SHOP_ACCOUNT = 'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak';
@@ -197,8 +222,9 @@ const Index = () => {
               Tokens: {state.tokens} <HydrToken size={11} />
             </div>
             <button
-              onClick={isLastBattle ? () => setScreen('leaderboard') : nextBattle}
-              className="font-pixel text-[10px] py-4 px-8 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full max-w-xs"
+              onClick={handleNextBattle}
+              disabled={!isLastBattle && isAdvancingBattle}
+              className="font-pixel text-[10px] py-4 px-8 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full max-w-xs disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLastBattle ? 'VIEW RESULTS' : 'NEXT BATTLE'}
             </button>
