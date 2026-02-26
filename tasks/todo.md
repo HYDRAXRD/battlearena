@@ -7,6 +7,23 @@
 
 ---
 
+## Active Task — 2026-02-26 — Battle progression bug (1st victory)
+
+- [x] Read full battle progression flow in the requested files
+- [x] Identify root cause for victory/next battle break after first win
+- [x] Apply focused fix in game state/UI flow
+- [x] Run `npm run build` and fix any build issues
+- [x] Deploy to Cloudflare Pages with Wrangler
+- [x] Commit and push with requested message
+
+### Review
+
+- Root cause identified in battle end race condition logic inside BattleArena.
+- Build succeeded with only Vite chunk size warning.
+- Cloudflare Pages deploy succeeded: https://a19d9a00.battlearena-3f6.pages.dev
+
+---
+
 ## Project Overview (for agents with no context)
 
 - **What it is**: A browser-based turn-based battle game with a Web3 twist. Players connect

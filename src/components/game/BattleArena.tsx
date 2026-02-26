@@ -109,17 +109,17 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   useEffect(() => {
     if (battleOverRef.current) return;
     
-    if (hydraHp <= 0) {
-      battleOverRef.current = true;
-      playSfx('lose');
-      setTimeout(() => {
-        if (onLose) onLose();
-      }, 800);
-    } else if (enemyHp <= 0) {
+    if (enemyHp <= 0) {
       battleOverRef.current = true;
       playSfx('win');
       setTimeout(() => {
         if (onWin) onWin(enemy.tokenReward, enemy.scoreValue);
+      }, 800);
+    } else if (hydraHp <= 0) {
+      battleOverRef.current = true;
+      playSfx('lose');
+      setTimeout(() => {
+        if (onLose) onLose();
       }, 800);
     }
   }, [hydraHp, enemyHp, onWin, onLose, enemy, playSfx]);
@@ -134,7 +134,11 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         return;
       }
       const dmg = Math.max(1, hydra.attack - enemy.defense);
-      setEnemyHp(p => Math.max(0, p - dmg));
+      setEnemyHp(p => {
+        const next = Math.max(0, p - dmg);
+        enemyHpRef.current = next;
+        return next;
+      });
       setShakeEnemy(true);
       setTimeout(() => setShakeEnemy(false), 200);
       addPopup(dmg, 'right');
@@ -146,7 +150,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
 
   useEffect(() => {
     const iv = setInterval(() => {
-      if (battleOverRef.current) return;
+      if (battleOverRef.current || enemyHpRef.current <= 0) return;
       
       let dmg = enemy.attack;
       if (enemy.specialThreshold && enemy.specialMultiplier && (enemyHpRef.current / enemy.maxHp) <= enemy.specialThreshold) {
@@ -197,7 +201,11 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
     const dmg = Math.max(1, ab.baseDamage + hydra.headPower[ab.headIndex] - enemy.defense);
     const heal = ab.healAmount + (ab.headIndex === 2 ? hydra.headPower[2] : 0);
     setHydraEnergy(p => p - ab.energyCost);
-    setEnemyHp(p => Math.max(0, p - dmg));
+    setEnemyHp(p => {
+      const next = Math.max(0, p - dmg);
+      enemyHpRef.current = next;
+      return next;
+    });
     setShakeEnemy(true);
     setTimeout(() => setShakeEnemy(false), 300);
     addPopup(dmg, 'right');
