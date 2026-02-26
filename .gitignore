@@ -12,8 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Tasks / internal agent notes
-tasks/
 
 # Editor directories and files
 .vscode/*

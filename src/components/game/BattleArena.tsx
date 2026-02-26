@@ -32,6 +32,7 @@ const ENEMY_IMAGES: Record<string, string> = {
   bonk: bonkEnemy,
   pengu: penguEnemy,
   early: earlyEnemy,
+  floki: earlyEnemy,
   dog: dogEnemy,
   trump: trumpEnemy,
 };
@@ -141,7 +142,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       playSfx('hit');
     }, 2000);
     return () => clearInterval(iv);
-  }, [enemy, hydra.attack, addPopup, addLog, playSfx]);
+  }, [enemy, hydra.attack, addPopup, addLog, playSfx, battleIndex]);
 
   useEffect(() => {
     const iv = setInterval(() => {
@@ -165,7 +166,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       }
     }, enemy.attackSpeed);
     return () => clearInterval(iv);
-  }, [enemy, addPopup, addLog, playSfx]);
+  }, [enemy, addPopup, addLog, playSfx, battleIndex]);
 
   useEffect(() => {
     const iv = setInterval(() => {
@@ -189,7 +190,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
     return () => clearInterval(iv);
   }, []);
 
-  const useAbility = (i: number) => {
+  const handleAbility = (i: number) => {
     if (battleOverRef.current) return;
     const ab = ABILITIES[i];
     if ((cooldowns[ab.id] || 0) > 0 || hydraEnergy < ab.energyCost) return;
@@ -296,6 +297,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
               src={enemyImg} 
               alt={enemy.name} 
               className='w-32 md:w-48 h-auto pixelated object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+              style={{ transform: 'scaleX(-1)' }}
             />
           ) : enemyArt ? (
             <PixelArt art={enemyArt} size={6} />
@@ -322,7 +324,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           return (
             <button
               key={ab.id}
-              onClick={() => useAbility(i)}
+              onClick={() => handleAbility(i)}
               disabled={disabled}
               className={`relative flex flex-col items-center justify-center w-full h-14 md:h-16 p-1 rounded border-2 transition-all ${
                 disabled 
@@ -339,7 +341,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
               </div>
               
               {cd > 0 && (
-                <div className='absolute inset-0 bg-blackFix: add null checks for onWin/onLose and rename floki to early to match assets/60 flex items-center justify-center font-pixel text-xs text-white rounded-sm'>
+                <div className='absolute inset-0 bg-black/60 flex items-center justify-center font-pixel text-xs text-white rounded-sm'>
                   {(cd / 1000).toFixed(1)}s
                 </div>
               )}

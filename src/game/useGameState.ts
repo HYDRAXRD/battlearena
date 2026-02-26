@@ -72,7 +72,7 @@ function reducer(state: GameState, action: Action): GameState {
         battleStartPurchases: {},
       };
 
-   case 'WIN_BATTLE': {
+    case 'WIN_BATTLE': {
       const earnedTokens = action.tokens ?? 0;
       const earnedScore = action.score ?? 0;
 
@@ -81,9 +81,6 @@ function reducer(state: GameState, action: Action): GameState {
         tokens: state.tokens + earnedTokens,
         totalScore: state.totalScore + earnedScore,
         screen: 'victory',
-        purchases: {},
-        battleStartPurchases: {},
-        hydra: { ...INITIAL_HYDRA },
       };
     }
 
