@@ -14,6 +14,7 @@ export interface EnemyConfig {
   id: string;
   name: string;
   subtitle: string;
+  flipX?: boolean;
   maxHp: number;
   attack: number;
   defense: number;

@@ -293,12 +293,12 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           className='relative flex flex-col items-center'
         >
           {enemyImg ? (
-            <img 
-              src={enemyImg} 
-              alt={enemy.name} 
-              className='w-32 md:w-48 h-auto pixelated object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
-              style={{ transform: 'scaleX(-1)' }}
-            />
+              <img 
+                src={enemyImg} 
+                alt={enemy.name} 
+                className='w-32 md:w-48 h-auto pixelated object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+                style={{ transform: enemy.flipX ? 'scaleX(-1)' : 'none' }}
+              />
           ) : enemyArt ? (
             <PixelArt art={enemyArt} size={6} />
           ) : (
