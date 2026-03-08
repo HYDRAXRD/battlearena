@@ -69,6 +69,11 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const { playSfx } = useGameAudio();
   const enemy = useMemo(() => ENEMIES[battleIndex] || ENEMIES[ENEMIES.length - 1], [battleIndex]);
   
+  // battleOverRef é inicializado como false toda vez que o componente monta
+  const battleOverRef = useRef(false);
+  const enemyHpRef = useRef(enemy.maxHp);
+  const popupIdRef = useRef(0);
+
   const [hydraHp, setHydraHp] = useState(hydra.hp);
   const [hydraEnergy, setHydraEnergy] = useState(hydra.energy);
   const [enemyHp, setEnemyHp] = useState(enemy.maxHp);
@@ -76,19 +81,19 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   const [popups, setPopups] = useState<DamagePopup[]>([]);
   const [shakeHydra, setShakeHydra] = useState(false);
   const [shakeEnemy, setShakeEnemy] = useState(false);
-  const [log, setLog] = useState<string[]>(['Battle start!']);
-  
-  const battleOverRef = useRef(false);
-  const enemyHpRef = useRef(enemy.maxHp);
-  const popupIdRef = useRef(0);
+  const [log, setLog] = useState<string[]>([`A new challenger appears: ${enemy.name}!`]);
+  const [battleEnded, setBattleEnded] = useState(false);
 
+  // Reseta tudo quando battleIndex muda (nova batalha)
   useEffect(() => {
     battleOverRef.current = false;
+    enemyHpRef.current = enemy.maxHp;
     setHydraHp(hydra.hp);
     setHydraEnergy(hydra.energy);
     setEnemyHp(enemy.maxHp);
-    enemyHpRef.current = enemy.maxHp;
     setCooldowns({});
+    setPopups([]);
+    setBattleEnded(false);
     setLog([`A new challenger appears: ${enemy.name}!`]);
   }, [battleIndex, enemy.maxHp, enemy.name, hydra.hp, hydra.energy]);
 
@@ -106,24 +111,29 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
 
   const addLog = useCallback((msg: string) => setLog(p => [...p.slice(-4), msg]), []);
 
+  // Detecta fim de batalha via estado React (não via ref) para garantir re-render correto
   useEffect(() => {
+    if (battleEnded) return;
     if (battleOverRef.current) return;
     
     if (enemyHp <= 0) {
       battleOverRef.current = true;
+      setBattleEnded(true);
       playSfx('win');
       setTimeout(() => {
-        if (onWin) onWin(enemy.tokenReward, enemy.scoreValue);
+        onWin(enemy.tokenReward, enemy.scoreValue);
       }, 800);
     } else if (hydraHp <= 0) {
       battleOverRef.current = true;
+      setBattleEnded(true);
       playSfx('lose');
       setTimeout(() => {
-        if (onLose) onLose();
+        onLose();
       }, 800);
     }
-  }, [hydraHp, enemyHp, onWin, onLose, enemy, playSfx]);
+  }, [hydraHp, enemyHp, battleEnded, onWin, onLose, enemy, playSfx]);
 
+  // Auto-attack Hydra -> Inimigo
   useEffect(() => {
     const iv = setInterval(() => {
       if (battleOverRef.current) return;
@@ -146,8 +156,10 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       playSfx('hit');
     }, 2000);
     return () => clearInterval(iv);
-  }, [enemy, hydra.attack, addPopup, addLog, playSfx, battleIndex]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battleIndex, enemy.id]);
 
+  // Auto-attack Inimigo -> Hydra
   useEffect(() => {
     const iv = setInterval(() => {
       if (battleOverRef.current || enemyHpRef.current <= 0) return;
@@ -170,15 +182,18 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       }
     }, enemy.attackSpeed);
     return () => clearInterval(iv);
-  }, [enemy, addPopup, addLog, playSfx, battleIndex]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battleIndex, enemy.id]);
 
+  // Regeneração de energia
   useEffect(() => {
     const iv = setInterval(() => {
       if (!battleOverRef.current) setHydraEnergy(p => Math.min(hydra.maxEnergy, p + 5));
     }, 1000);
     return () => clearInterval(iv);
-  }, [hydra.maxEnergy]);
+  }, [hydra.maxEnergy, battleIndex]);
 
+  // Tick de cooldowns
   useEffect(() => {
     const iv = setInterval(() => setCooldowns(p => {
       const n: Record<string, number> = {};
@@ -192,7 +207,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       return changed ? n : p;
     }), 100);
     return () => clearInterval(iv);
-  }, []);
+  }, [battleIndex]);
 
   const handleAbility = (i: number) => {
     if (battleOverRef.current) return;
@@ -231,7 +246,6 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           <span className='text-xs md:text-sm font-pixel text-white'>Hydra</span>
           <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden'>
             <motion.div 
-              initial={{ width: 0 }}
               animate={{ width: `${hpPct}%` }}
               className='h-full bg-gradient-to-r from-game-red to-game-purple'
             />
@@ -241,7 +255,6 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           </span>
           <div className='w-full h-1.5 md:h-2 bg-gray-800 rounded-full overflow-hidden'>
             <motion.div 
-              initial={{ width: 0 }}
               animate={{ width: `${epPct}%` }}
               className='h-full bg-game-blue'
             />
@@ -259,7 +272,6 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           <span className='text-xs md:text-sm font-pixel text-white'>{enemy.name}</span>
           <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden'>
             <motion.div 
-              initial={{ width: 0 }}
               animate={{ width: `${eHpPct}%` }}
               className='h-full bg-game-red'
             />

@@ -168,7 +168,7 @@ const Index = () => {
         )}
 
         {hasName && state.screen === 'battle' && (
-          <div key="battle" className="relative w-full min-h-screen">
+          <div key={`battle-${state.currentBattle}`} className="relative w-full min-h-screen">
             <button
               onClick={() => setBattleShopOpen(true)}
               className="fixed bottom-16 right-4 z-40 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-yellow-400/70 bg-black/70 text-yellow-400 hover:bg-yellow-400/20 transition-all shadow-lg"
@@ -193,7 +193,9 @@ const Index = () => {
               </div>
             )}
             {!battleShopOpen && (
+              // key baseada em currentBattle garante remount completo do BattleArena a cada nova luta
               <BattleArena
+                key={`arena-${state.currentBattle}`}
                 hydra={state.hydra}
                 battleIndex={state.currentBattle}
                 cooldownReduction={state.purchases['cooldown'] || 0}
