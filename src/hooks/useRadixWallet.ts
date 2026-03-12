@@ -39,18 +39,9 @@ const DAPP_ACCOUNT = 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevv
 export const getRdt = (): ReturnType<typeof RadixDappToolkit> | null => rdtInstance;
 
 export const initRdt = (): ReturnType<typeof RadixDappToolkit> | null => {
-  // Destroi instância anterior se existir
-  if (rdtInstance) {
-    try { rdtInstance.destroy(); } catch (_) {}
-    rdtInstance = null;
-  }
+  if (rdtInstance) return rdtInstance;
 
   try {
-    // Limpa TODO o localStorage sem exceção
-    try {
-      localStorage.clear();
-    } catch (_) {}
-
     rdtInstance = RadixDappToolkit({
       dAppDefinitionAddress: DAPP_ACCOUNT,
       networkId: RadixNetwork.Mainnet,
