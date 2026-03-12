@@ -128,8 +128,6 @@ const Index = () => {
         {hasName && state.screen === 'start' && (
           <StartScreen
             key="start"
-            state={state}
-            playerName={playerName}
             onStart={startGame}
             onShop={() => goShop('start')}
             onLeaderboard={() => setScreen('leaderboard')}
@@ -239,8 +237,9 @@ const Index = () => {
         {hasName && state.screen === 'leaderboard' && (
           <Leaderboard
             key="leaderboard"
-            state={state}
             playerName={playerName}
+            totalScore={state.totalScore}
+            totalTokens={state.tokens}
             onBack={() => setScreen('start')}
           />
         )}

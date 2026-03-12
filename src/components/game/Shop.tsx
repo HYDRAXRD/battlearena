@@ -60,8 +60,9 @@ CALL_METHOD
 
       const result = await sendTransaction(manifest, `Shop: ${item.name} x${effectiveQty}`);
 
-      if (result.isErr()) {
-        console.error('Transaction failed:', result.error);
+      if ('isErr' in result && typeof result.isErr === 'function' && result.isErr()) {
+        const errResult = result as { error?: string };
+        console.error('Transaction failed:', errResult.error);
         return;
       }
     }
