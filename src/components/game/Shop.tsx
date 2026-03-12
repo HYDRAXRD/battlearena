@@ -19,8 +19,11 @@ const HydrToken = ({ size = 14 }: { size?: number }) => (
 
 const QUANTITIES = [1, 2, 3];
 
+const TREASURY = 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e';
+const HYDR_RESOURCE = 'resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r';
+
 const Shop: React.FC<Props> = ({ tokens, purchases, onPurchase, onBack }) => {
-  const { connected, getShortAddress, accounts, tokenBalance } = useRadixWallet();
+  const { connected, getShortAddress, accounts, tokenBalance, sendTransaction } = useRadixWallet();
   const [selectedQty, setSelectedQty] = useState<Record<string, number>>({});
 
   const getQty = (id: string) => selectedQty[id] ?? 1;
@@ -29,6 +32,42 @@ const Shop: React.FC<Props> = ({ tokens, purchases, onPurchase, onBack }) => {
   const effectiveBalance = connected && tokenBalance > 0 ? tokenBalance : tokens;
   const balanceLabel = connected && tokenBalance > 0 ? tokenBalance.toFixed(2) : tokens;
   const balanceSource = connected ? 'Wallet' : 'In-Game';
+
+  const handleBuy = async (itemId: string, effectiveQty: number) => {
+    const item = SHOP_ITEMS.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (connected && accounts.length > 0) {
+      const totalCost = (item.cost * effectiveQty).toFixed(2);
+      const userAddress = accounts[0].address;
+
+      const manifest = `CALL_METHOD
+  Address("${userAddress}")
+  "withdraw"
+  Address("${HYDR_RESOURCE}")
+  Decimal("${totalCost}")
+;
+TAKE_FROM_WORKTOP
+  Address("${HYDR_RESOURCE}")
+  Decimal("${totalCost}")
+  Bucket("payment")
+;
+CALL_METHOD
+  Address("${TREASURY}")
+  "deposit"
+  Bucket("payment")
+;`;
+
+      const result = await sendTransaction(manifest, `Shop: ${item.name} x${effectiveQty}`);
+
+      if (result.isErr()) {
+        console.error('Transaction failed:', result.error);
+        return;
+      }
+    }
+
+    onPurchase(itemId, effectiveQty);
+  };
 
   return (
     <motion.div
@@ -146,7 +185,7 @@ const Shop: React.FC<Props> = ({ tokens, purchases, onPurchase, onBack }) => {
                     <HydrToken size={9} />{totalCost} total
                   </div>
                   <button
-                    onClick={() => onPurchase(item.id, effectiveQty)}
+                    onClick={() => handleBuy(item.id, effectiveQty)}
                     disabled={disabled}
                     className={`font-pixel text-[7px] px-3 py-2 rounded transition-all ${
                       disabled
