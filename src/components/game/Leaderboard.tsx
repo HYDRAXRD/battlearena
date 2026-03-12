@@ -19,7 +19,14 @@ interface Props {
   onBack: () => void;
 }
 
+function getLeaderboardApiUrl(): string {
+  if (typeof window === 'undefined') return '/api/leaderboard';
+  const prefix = window.location.pathname.startsWith('/battlearena') ? '/battlearena' : '';
+  return `${prefix}/api/leaderboard`;
+}
+
 const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onBack }) => {
+  const apiUrl = getLeaderboardApiUrl();
   const trophies = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
   const hasCompletedGame = Boolean(playerName && totalScore > 0);
   const [scores, setScores] = useState<Score[]>(() => {
@@ -41,7 +48,7 @@ const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onB
 
     hasSubmittedRef.current = true;
 
-    fetch('/api/leaderboard', {
+    fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: playerName, score: totalScore, tokens: totalTokens }),
@@ -59,7 +66,7 @@ const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onB
       .catch(() => {
         setError('Could not save your score. Showing available data.');
       });
-  }, [hasCompletedGame, playerName, totalScore, totalTokens]);
+  }, [apiUrl, hasCompletedGame, playerName, totalScore, totalTokens]);
 
   // Busca scores globais
   useEffect(() => {
@@ -68,7 +75,7 @@ const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onB
     setLoading(true);
     setError(null);
 
-    fetch('/api/leaderboard')
+    fetch(apiUrl)
       .then(async (response) => {
         if (!response.ok) {
           throw new Error('Failed to load leaderboard');
@@ -101,7 +108,7 @@ const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onB
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [apiUrl]);
 
   return (
     <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
