@@ -31,7 +31,7 @@ interface GatewayAccountItem {
 }
 
 let rdtInstance: ReturnType<typeof RadixDappToolkit> | null = null;
-const HYDR_TOKEN = 'resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh';
+const HYDR_TOKEN = 'resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r';
 
 export const getRdt = (): ReturnType<typeof RadixDappToolkit> | null => rdtInstance;
 
@@ -39,11 +39,11 @@ export const initRdt = (): ReturnType<typeof RadixDappToolkit> | null => {
   if (rdtInstance) return rdtInstance;
   try {
     rdtInstance = RadixDappToolkit({
-      dAppDefinitionAddress: 'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak',
-      networkId: RadixNetwork.Stokenet,
-      applicationName: 'BattleArena',
-      applicationVersion: '1.0.0',
-    });
+  dAppDefinitionAddress: 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e',
+  networkId: RadixNetwork.Mainnet,
+  applicationName: 'BattleArena',
+  applicationVersion: '1.0.0',
+  });
     rdtInstance.walletApi.setRequestData(
       DataRequestBuilder.accounts().atLeast(1)
     );
@@ -65,7 +65,7 @@ export const useRadixWallet = () => {
   const fetchBalance = useCallback(async (address: string) => {
     try {
       // Usando o endpoint correto e tratando a estrutura de resposta do Gateway API
-      const response = await fetch(`https://stokenet.radixdlt.com/state/entity/details`, {
+     const response = await fetch(`https://mainnet.radixdlt.com/state/entity/details`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
