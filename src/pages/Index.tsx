@@ -23,7 +23,7 @@ const MuteButton = ({ muted, onToggle }: { muted: boolean; onToggle: () => void 
     onClick={onToggle}
     className="fixed bottom-4 left-4 z-50 font-pixel text-[8px] px-3 py-2 rounded bg-black/60 text-white border border-white/20 hover:bg-white/10 transition-all shadow-lg"
   >
-    {muted ? '\uD83D\uDD07 OFF' : '\uD83D\uDD0A ON'}
+    {muted ? '🔇 OFF' : '🔊 ON'}
   </button>
 );
 
@@ -101,29 +101,34 @@ const Index = () => {
     nextBattle();
   }, [isLastBattle, isAdvancingBattle, nextBattle, setScreen]);
 
-  const HYDR_TOKEN = 'resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh';
-  const SHOP_ACCOUNT = 'account_tdx_2_12888nvfwvdqc4wxj8cqda5hf6ll0jtxrxlh0wrxp9awacwf0enzwak';
+  // Mainnet addresses
+  const HYDR_TOKEN = 'resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r';
+  const SHOP_ACCOUNT = 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e';
 
   const handlePurchase = async (id: string, qty: number = 1) => {
     const item = SHOP_ITEMS.find(i => i.id === id);
     if (!item) return;
     const totalCost = item.cost * qty;
+
     if (connected && accounts.length > 0) {
       try {
-        const manifest = `
-          CALL_METHOD
-            Address("${accounts[0].address}")
-            "withdraw"
-            Address("${HYDR_TOKEN}")
-            Decimal("${totalCost}");
-          TAKE_ALL_FROM_WORKTOP
-            Address("${HYDR_TOKEN}")
-            Bucket("bucket1");
-          CALL_METHOD
-            Address("${SHOP_ACCOUNT}")
-            "deposit"
-            Bucket("bucket1");
-        `;
+        const manifest = `CALL_METHOD
+  Address("${accounts[0].address}")
+  "withdraw"
+  Address("${HYDR_TOKEN}")
+  Decimal("${totalCost}")
+;
+TAKE_FROM_WORKTOP
+  Address("${HYDR_TOKEN}")
+  Decimal("${totalCost}")
+  Bucket("bucket1")
+;
+CALL_METHOD
+  Address("${SHOP_ACCOUNT}")
+  "deposit"
+  Bucket("bucket1")
+;`;
+
         const result = await sendTransaction(manifest, `Buy: ${qty}x ${item.name} (${totalCost} HYDR)`);
         if (result && 'isErr' in result && typeof result.isErr === 'function' && result.isErr()) {
           const errResult = result as { error?: string };
@@ -144,7 +149,7 @@ const Index = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-game-dark overflow-hidden">
+    <div className="relative min-h-screen bg-black overflow-hidden">
       <StarryBackground />
       <MuteButton muted={muted} onToggle={toggleMute} />
 
@@ -153,37 +158,30 @@ const Index = () => {
         <RadixConnectButton />
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {!hasName && (
           <NameEntry key="name" onConfirm={handleNameConfirm} />
         )}
-
         {hasName && state.screen === 'start' && (
           <StartScreen
             key="start"
+            state={state}
+            playerName={playerName}
             onStart={startGame}
             onShop={() => goShop('start')}
             onLeaderboard={() => setScreen('leaderboard')}
           />
         )}
-
         {hasName && state.screen === 'battle' && (
-          <motion.div
-            key={`battle-${state.currentBattle}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="relative z-10 w-full min-h-screen"
-          >
+          <div key="battle" className="relative">
             <button
               onClick={() => setBattleShopOpen(true)}
               className="fixed bottom-16 right-4 z-40 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-yellow-400/70 bg-black/70 text-yellow-400 hover:bg-yellow-400/20 transition-all shadow-lg"
             >
-              SHOP
+              <HydrToken size={10} /> SHOP
             </button>
             {battleShopOpen && (
-              <div className="fixed inset-0 z-50 bg-black/80 overflow-y-auto">
+              <div className="fixed inset-0 z-50 bg-black/90 overflow-y-auto">
                 <button
                   onClick={() => setBattleShopOpen(false)}
                   className="fixed top-4 left-4 z-[60] font-pixel text-[10px] text-game-teal hover:text-game-teal/80 bg-black/60 px-3 py-2 rounded border border-game-teal/40"
@@ -200,40 +198,33 @@ const Index = () => {
               </div>
             )}
             {!battleShopOpen && (
-              // key baseada em currentBattle garante remount completo do BattleArena a cada nova luta
               <BattleArena
-                key={`arena-${state.currentBattle}`}
-                hydra={state.hydra}
-                battleIndex={state.currentBattle}
-                cooldownReduction={state.purchases['cooldown'] || 0}
+                key={state.currentBattle}
+                state={state}
+                enemy={currentEnemy}
+                playerName={playerName}
                 onWin={handleWinBattle}
                 onLose={handleLose}
               />
             )}
-          </motion.div>
+          </div>
         )}
-
         {hasName && state.screen === 'victory' && (
           <motion.div
             key="victory"
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 gap-4"
           >
-            <div className="text-5xl">🏆</div>
-            <div className="font-pixel text-[20px] text-game-teal">VICTORY!</div>
-            <div className="font-pixel text-[12px] text-white/80">{victoryEnemy.name} Defeated!</div>
-            <div className="font-pixel text-[11px] text-yellow-400 flex items-center gap-1">
-              +{victoryEnemy.tokenReward} <HydrToken size={12} /> HYDR
-            </div>
-            <div className="font-pixel text-[10px] text-white/60 mt-2">
-              Tokens: {state.tokens} <HydrToken size={11} />
-            </div>
+            <div className="font-pixel text-[40px] text-yellow-400">🏆</div>
+            <div className="font-pixel text-[18px] text-yellow-400">VICTORY!</div>
+            <div className="font-pixel text-[10px] text-white/80">{victoryEnemy.name} Defeated!</div>
+            <div className="font-pixel text-[9px] text-game-teal">+{victoryEnemy.tokenReward} HYDR</div>
+            <div className="font-pixel text-[8px] text-white/50">Tokens: {state.tokens}</div>
             <button
               onClick={handleNextBattle}
-              disabled={!isLastBattle && isAdvancingBattle}
-              className="font-pixel text-[10px] py-4 px-8 bg-game-teal text-black rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full max-w-xs disabled:opacity-60 disabled:cursor-not-allowed"
+              className="font-pixel text-[10px] py-4 px-8 bg-game-purple text-white rounded border-b-4 border-black/30 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all w-full max-w-xs"
             >
               {isLastBattle ? 'VIEW RESULTS' : 'NEXT BATTLE'}
             </button>
@@ -245,18 +236,17 @@ const Index = () => {
             </button>
           </motion.div>
         )}
-
         {hasName && state.screen === 'defeat' && (
           <motion.div
             key="defeat"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 gap-4"
           >
-            <div className="text-5xl">💀</div>
-            <div className="font-pixel text-[20px] text-red-400">DEFEATED!</div>
-            <div className="font-pixel text-[10px] text-white/60 text-center">
+            <div className="font-pixel text-[40px]">💀</div>
+            <div className="font-pixel text-[18px] text-red-400">DEFEATED!</div>
+            <div className="font-pixel text-[9px] text-white/60 text-center">
               Your Hydra has fallen in battle...<br />The mempool can be cruel.
             </div>
             <button
@@ -273,7 +263,6 @@ const Index = () => {
             </button>
           </motion.div>
         )}
-
         {hasName && state.screen === 'shop' && (
           <Shop
             key="shop"
@@ -284,13 +273,11 @@ const Index = () => {
             onBack={() => setScreen(shopReturn)}
           />
         )}
-
         {hasName && state.screen === 'leaderboard' && (
           <Leaderboard
             key="leaderboard"
+            state={state}
             playerName={playerName}
-            totalScore={state.totalScore}
-            totalTokens={state.tokens}
             onBack={() => setScreen('start')}
           />
         )}
