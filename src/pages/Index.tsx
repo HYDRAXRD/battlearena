@@ -162,10 +162,10 @@ const Index = () => {
             )}
             {!battleShopOpen && (
               <BattleArena
-                key={state.currentBattle}
-                state={state}
-                enemy={currentEnemy}
-                playerName={playerName}
+                key={`arena-${state.currentBattle}`}
+                hydra={state.hydra}
+                battleIndex={state.currentBattle}
+                cooldownReduction={state.purchases['cooldown'] || 0}
                 onWin={handleWinBattle}
                 onLose={handleLose}
               />
