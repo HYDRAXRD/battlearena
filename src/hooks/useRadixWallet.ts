@@ -30,28 +30,29 @@ interface GatewayAccountItem {
   fungible_resources?: { items: GatewayFungibleResource[] };
 }
 
+// NÃO usar singleton — cria nova instância sempre limpa
 let rdtInstance: ReturnType<typeof RadixDappToolkit> | null = null;
+
 const HYDR_TOKEN = 'resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r';
+const DAPP_ACCOUNT = 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e';
 
 export const getRdt = (): ReturnType<typeof RadixDappToolkit> | null => rdtInstance;
 
 export const initRdt = (): ReturnType<typeof RadixDappToolkit> | null => {
-  if (rdtInstance) return rdtInstance;
+  // Destroi instância anterior se existir
+  if (rdtInstance) {
+    try { rdtInstance.destroy(); } catch (_) {}
+    rdtInstance = null;
+  }
 
   try {
-    // Força limpeza de qualquer sessão anterior (Stokenet ou outra)
-    Object.keys(localStorage)
-      .filter(k =>
-        k.startsWith('rdt') ||
-        k.startsWith('radix') ||
-        k.includes('dappToolkit') ||
-        k.includes('wallet') ||
-        k.includes('persona')
-      )
-      .forEach(k => localStorage.removeItem(k));
+    // Limpa TODO o localStorage sem exceção
+    try {
+      localStorage.clear();
+    } catch (_) {}
 
     rdtInstance = RadixDappToolkit({
-      dAppDefinitionAddress: 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e',
+      dAppDefinitionAddress: DAPP_ACCOUNT,
       networkId: RadixNetwork.Mainnet,
       applicationName: 'BattleArena',
       applicationVersion: '1.0.0',
@@ -78,26 +79,27 @@ export const useRadixWallet = () => {
 
   const fetchBalance = useCallback(async (address: string) => {
     try {
-      // Usando o endpoint correto e tratando a estrutura de resposta do Gateway API
-     const response = await fetch(`https://mainnet.radixdlt.com/state/entity/details`, {
+      const response = await fetch('https://mainnet.radixdlt.com/state/entity/details', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           addresses: [address],
-          aggregation_level: 'Global'
+          aggregation_level: 'Global',
         }),
       });
-      
+
       if (!response.ok) return 0;
-      
+
       const data = await response.json();
-      const accountData = data.items?.find((item: GatewayAccountItem) => item.address === address);
-      
-      // No Babylon Gateway, os recursos fungíveis ficam em fungible_resources.items
+      const accountData = data.items?.find(
+        (item: GatewayAccountItem) => item.address === address
+      );
+
       const fungibleResources = accountData?.fungible_resources?.items || [];
-      const hydrResource = fungibleResources.find((r: GatewayFungibleResource) => r.resource_address === HYDR_TOKEN);
-      
-      // O valor vem como string "amount"
+      const hydrResource = fungibleResources.find(
+        (r: GatewayFungibleResource) => r.resource_address === HYDR_TOKEN
+      );
+
       return hydrResource ? parseFloat(hydrResource.amount) : 0;
     } catch (e) {
       console.error('Fetch balance error:', e);
@@ -107,6 +109,7 @@ export const useRadixWallet = () => {
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
+
     try {
       const rdt = initRdt();
       if (!rdt) return;
@@ -115,12 +118,13 @@ export const useRadixWallet = () => {
         try {
           const accounts = (walletData?.accounts as RadixAccount[]) ?? [];
           let balance = 0;
+
           if (accounts.length > 0) {
             balance = await fetchBalance(accounts[0].address);
           }
-          
+
           setState({
-            connected: !!(accounts.length),
+            connected: accounts.length > 0,
             accounts,
             personaLabel: walletData?.persona?.label,
             isLoading: false,
@@ -135,28 +139,20 @@ export const useRadixWallet = () => {
     }
 
     return () => {
-      try {
-        subscription?.unsubscribe();
-      } catch (_) {
-        // Intentionally ignored - unsubscribe errors are non-recoverable at teardown
-      }
+      try { subscription?.unsubscribe(); } catch (_) {}
     };
   }, [fetchBalance]);
 
   const connect = useCallback(async () => {
     const rdt = getRdt();
     if (!rdt) return;
-    // Connection UI is handled by <radix-connect-button> web component.
-    // This provides a programmatic trigger if needed.
     rdt.walletApi?.sendRequest();
   }, []);
 
   const disconnect = useCallback(async () => {
     const rdt = getRdt();
     if (!rdt) return;
-    try {
-      rdt.disconnect();
-    } catch (e) {
+    try { rdt.disconnect(); } catch (e) {
       console.warn('disconnect error:', e);
     }
   }, []);
@@ -175,12 +171,11 @@ export const useRadixWallet = () => {
         message,
       });
 
-      // Atualiza o saldo após a transação se tiver sucesso
       if (!result.isErr() && state.accounts.length > 0) {
         setTimeout(async () => {
           const newBalance = await fetchBalance(state.accounts[0].address);
           setState(s => ({ ...s, tokenBalance: newBalance }));
-        }, 2000); // Aguarda um pouco o indexador
+        }, 2000);
       }
 
       return result;
