@@ -38,12 +38,20 @@ export const getRdt = (): ReturnType<typeof RadixDappToolkit> | null => rdtInsta
 export const initRdt = (): ReturnType<typeof RadixDappToolkit> | null => {
   if (rdtInstance) return rdtInstance;
   try {
+    // Limpa sessão antiga de Stokenet se existir
+    const savedNetwork = localStorage.getItem('rdt:network');
+    if (savedNetwork && savedNetwork !== String(RadixNetwork.Mainnet)) {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('rdt') || k.includes('radix'))
+        .forEach(k => localStorage.removeItem(k));
+    }
+
     rdtInstance = RadixDappToolkit({
-  dAppDefinitionAddress: 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e',
-  networkId: RadixNetwork.Mainnet,
-  applicationName: 'BattleArena',
-  applicationVersion: '1.0.0',
-  });
+      dAppDefinitionAddress: 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e',
+      networkId: RadixNetwork.Mainnet,
+      applicationName: 'BattleArena',
+      applicationVersion: '1.0.0',
+    });
     rdtInstance.walletApi.setRequestData(
       DataRequestBuilder.accounts().atLeast(1)
     );
