@@ -41,7 +41,7 @@ const PixelArt = ({ art, size = 8 }: { art: string[], size?: number }) => {
   if (!art || !art.length) return <div className='text-4xl'>👾</div>;
   const cols = art[0]?.length || 1;
   return (
-    <div 
+    <div
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${cols}, ${size}px)`,
@@ -49,15 +49,15 @@ const PixelArt = ({ art, size = 8 }: { art: string[], size?: number }) => {
         imageRendering: 'pixelated',
       }}
     >
-      {art.flatMap((row, y) => 
+      {art.flatMap((row, y) =>
         row.split('').map((char, x) => (
-          <div 
-            key={`${x}-${y}`} 
-            style={{ 
+          <div
+            key={`${x}-${y}`}
+            style={{
               backgroundColor: PIXEL_PALETTE[char] || 'transparent',
               width: size,
               height: size
-            }} 
+            }}
           />
         ))
       )}
@@ -68,7 +68,7 @@ const PixelArt = ({ art, size = 8 }: { art: string[], size?: number }) => {
 const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, onWin, onLose }) => {
   const { playSfx } = useGameAudio();
   const enemy = useMemo(() => ENEMIES[battleIndex] || ENEMIES[ENEMIES.length - 1], [battleIndex]);
-  
+
   // battleOverRef é inicializado como false toda vez que o componente monta
   const battleOverRef = useRef(false);
   const enemyHpRef = useRef(enemy.maxHp);
@@ -115,7 +115,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   useEffect(() => {
     if (battleEnded) return;
     if (battleOverRef.current) return;
-    
+
     if (enemyHp <= 0) {
       battleOverRef.current = true;
       setBattleEnded(true);
@@ -137,7 +137,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
   useEffect(() => {
     const iv = setInterval(() => {
       if (battleOverRef.current) return;
-      
+
       if (Math.random() < enemy.dodgeRate) {
         addPopup(0, 'right', false, true);
         addLog(`${enemy.name} dodged!`);
@@ -156,14 +156,14 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       playSfx('hit');
     }, 2000);
     return () => clearInterval(iv);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battleIndex, enemy.id]);
 
   // Auto-attack Inimigo -> Hydra
   useEffect(() => {
     const iv = setInterval(() => {
       if (battleOverRef.current || enemyHpRef.current <= 0) return;
-      
+
       let dmg = enemy.attack;
       if (enemy.specialThreshold && enemy.specialMultiplier && (enemyHpRef.current / enemy.maxHp) <= enemy.specialThreshold) {
         dmg = Math.floor(dmg * enemy.specialMultiplier);
@@ -182,7 +182,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       }
     }, enemy.attackSpeed);
     return () => clearInterval(iv);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battleIndex, enemy.id]);
 
   // Regeneração de energia
@@ -244,21 +244,24 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
       <div className='flex justify-between items-center w-full px-2'>
         <div className='flex flex-col items-start space-y-1 w-1/3'>
           <span className='text-xs md:text-sm font-pixel text-white'>Hydra</span>
-          <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden'>
-            <motion.div 
+          <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-red-500/50 rounded-full overflow-hidden'>
+            <motion.div
               animate={{ width: `${hpPct}%` }}
-              className='h-full bg-gradient-to-r from-game-red to-game-purple'
+              className='h-full bg-gradient-to-r from-red-600 via-red-500 to-orange-400'
             />
           </div>
-          <span className='text-[10px] md:text-xs font-pixel text-white'>
-            {Math.max(0, Math.floor(hydraHp))}/{hydra.maxHp} HP
+          <span className='text-[10px] md:text-xs font-pixel text-red-400'>
+            ❤️ {Math.max(0, Math.floor(hydraHp))}/{hydra.maxHp} HP
           </span>
-          <div className='w-full h-1.5 md:h-2 bg-gray-800 rounded-full overflow-hidden'>
-            <motion.div 
+          <div className='w-full h-2.5 md:h-3 bg-gray-800 border-2 border-cyan-500/50 rounded-full overflow-hidden'>
+            <motion.div
               animate={{ width: `${epPct}%` }}
-              className='h-full bg-game-blue'
+              className='h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500'
             />
           </div>
+          <span className='text-[10px] md:text-xs font-pixel text-cyan-400'>
+            ⚡ {Math.max(0, Math.floor(hydraEnergy))}/{hydra.maxEnergy} Energy
+          </span>
         </div>
 
         <div className='flex flex-col items-center w-1/3'>
@@ -270,14 +273,14 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
 
         <div className='flex flex-col items-end space-y-1 w-1/3'>
           <span className='text-xs md:text-sm font-pixel text-white'>{enemy.name}</span>
-          <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-white rounded-full overflow-hidden'>
-            <motion.div 
+          <div className='w-full h-3 md:h-4 bg-gray-800 border-2 border-red-500/50 rounded-full overflow-hidden'>
+            <motion.div
               animate={{ width: `${eHpPct}%` }}
-              className='h-full bg-game-red'
+              className='h-full bg-gradient-to-r from-pink-600 via-red-500 to-red-600'
             />
           </div>
-          <span className='text-[10px] md:text-xs font-pixel text-white'>
-            {Math.max(0, Math.floor(enemyHp))}/{enemy.maxHp} HP
+          <span className='text-[10px] md:text-xs font-pixel text-red-400'>
+            ❤️ {Math.max(0, Math.floor(enemyHp))}/{enemy.maxHp} HP
           </span>
           <span className='text-[8px] md:text-[10px] font-pixel text-gray-400'>{enemy.subtitle}</span>
         </div>
@@ -297,28 +300,29 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
           </motion.div>
         ))}
 
-        <motion.div 
+        <motion.div
           animate={shakeHydra ? { x: [-10, 10, -10, 10, 0] } : {}}
           className='relative'
         >
-          <img 
-            src={hydraBattle} 
-            alt='Hydra' 
-            className='w-32 md:w-48 h-auto pixelated drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]' 
+          <img
+            src={hydraBattle}
+            alt='Hydra'
+            className='w-32 md:w-48 h-auto pixelated drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]'
+            style={{ transform: 'scaleX(-1)' }}
           />
         </motion.div>
 
-        <motion.div 
+        <motion.div
           animate={shakeEnemy ? { x: [10, -10, 10, -10, 0] } : {}}
           className='relative flex flex-col items-center'
         >
           {enemyImg ? (
-              <img 
-                src={enemyImg} 
-                alt={enemy.name} 
-                className='w-32 md:w-48 h-auto pixelated object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
-                style={{ transform: enemy.flipX ? 'scaleX(-1)' : 'none' }}
-              />
+            <img
+              src={enemyImg}
+              alt={enemy.name}
+              className='w-32 md:w-48 h-auto pixelated object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+              style={{ transform: enemy.flipX ? 'scaleX(-1)' : 'none' }}
+            />
           ) : enemyArt ? (
             <PixelArt art={enemyArt} size={6} />
           ) : (
@@ -340,17 +344,16 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
         {ABILITIES.map((ab, i) => {
           const cd = cooldowns[ab.id] || 0;
           const disabled = cd > 0 || hydraEnergy < ab.energyCost || battleOverRef.current;
-          
+
           return (
             <button
               key={ab.id}
               onClick={() => handleAbility(i)}
               disabled={disabled}
-              className={`relative flex flex-col items-center justify-center w-full h-14 md:h-16 p-1 rounded border-2 transition-all ${
-                disabled 
-                  ? 'bg-gray-800/50 border-gray-700 text-gray-600 cursor-not-allowed' 
-                  : 'bg-black/60 border-game-purple/50 text-white hover:border-game-purple hover:bg-game-purple/10 active:scale-95'
-              }`}
+              className={`relative flex flex-col items-center justify-center w-full h-14 md:h-16 p-1 rounded border-2 transition-all ${disabled
+                ? 'bg-gray-800/50 border-gray-700 text-gray-600 cursor-not-allowed'
+                : 'bg-black/60 border-game-purple/50 text-white hover:border-game-purple hover:bg-game-purple/10 active:scale-95'
+                }`}
             >
               <div className='flex items-center space-x-1'>
                 <span className='text-sm md:text-base'>{ab.icon}</span>
@@ -359,7 +362,7 @@ const BattleArena: React.FC<Props> = ({ hydra, battleIndex, cooldownReduction, o
               <div className='text-[8px] md:text-[10px] font-pixel text-game-blue mt-0.5'>
                 ⚡ {ab.energyCost}
               </div>
-              
+
               {cd > 0 && (
                 <div className='absolute inset-0 bg-black/60 flex items-center justify-center font-pixel text-xs text-white rounded-sm'>
                   {(cd / 1000).toFixed(1)}s

@@ -2,14 +2,21 @@ import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { initRdt } from "./hooks/useRadixWallet";
+import { GameAudioProvider } from "./hooks/useGameAudio";
 
 // Declare the radix-connect-button custom element for TypeScript
+declare module 'react' {
+  interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+    // Allow radix-connect-button custom element
+  }
+}
+
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
       'radix-connect-button': React.DetailedHTMLProps<
@@ -43,8 +50,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Error
   }
 }
 
-const queryClient = new QueryClient();
-
 const App = () => {
   useEffect(() => {
     // Initialize the Radix dApp Toolkit once on app load
@@ -57,8 +62,8 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
+      <TooltipProvider>
+        <GameAudioProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter basename="/battlearena">
@@ -68,8 +73,8 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
+        </GameAudioProvider>
+      </TooltipProvider>
     </ErrorBoundary>
   );
 };

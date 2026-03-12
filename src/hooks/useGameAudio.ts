@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { createContext, createElement, useContext, useEffect, useRef, useCallback, useState, type ReactNode } from 'react';
 
 // ─────────────────────────────────────────────────────────────────
 // useGameAudio — Procedurally generated audio via Web Audio API
@@ -15,6 +15,8 @@ interface UseGameAudioReturn {
   playSfx: (type: 'hit' | 'win' | 'lose' | 'ability' | 'buy') => void;
 }
 
+const GameAudioContext = createContext<UseGameAudioReturn | null>(null);
+
 export function useGameAudio(): UseGameAudioReturn {
   const ctxRef = useRef<AudioContext | null>(null);
   const masterRef = useRef<GainNode | null>(null);
@@ -26,7 +28,7 @@ export function useGameAudio(): UseGameAudioReturn {
   // ── Init AudioContext on first interaction ──
   const getCtx = useCallback((): AudioContext => {
     if (!ctxRef.current) {
-      ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      ctxRef.current = new (window.AudioContext || (window as unknown as Record<string, typeof AudioContext>).webkitAudioContext)();
       masterRef.current = ctxRef.current.createGain();
       masterRef.current.gain.value = 0.35;
       masterRef.current.connect(ctxRef.current.destination);
@@ -242,4 +244,17 @@ export function useGameAudio(): UseGameAudioReturn {
   }, [stopAll]);
 
   return { muted, toggleMute, playMode, stopAll, playSfx };
+}
+
+export function GameAudioProvider({ children }: { children: ReactNode }) {
+  const audio = useGameAudio();
+  return createElement(GameAudioContext.Provider, { value: audio }, children);
+}
+
+export function useGameAudioContext(): UseGameAudioReturn {
+  const ctx = useContext(GameAudioContext);
+  if (!ctx) {
+    throw new Error('useGameAudioContext must be used within GameAudioProvider');
+  }
+  return ctx;
 }

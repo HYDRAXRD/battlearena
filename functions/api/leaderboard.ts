@@ -15,7 +15,11 @@ export const onRequestGet: PagesFunction<{ BATTLE_ARENA_KV: KVNamespace }> = asy
     });
   } catch (e) {
     return new Response('[]', {
-      headers: { 'Content-Type': 'application/json' }
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 };
@@ -24,7 +28,10 @@ export const onRequestPost: PagesFunction<{ BATTLE_ARENA_KV: KVNamespace }> = as
   try {
     const entry: LeaderboardEntry = await context.request.json();
     if (!entry.name || typeof entry.score !== 'number' || entry.score < 0) {
-      return new Response('Invalid data', { status: 400 });
+      return new Response('Invalid data', {
+        status: 400,
+        headers: { 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
     const currentData = await context.env.BATTLE_ARENA_KV.get('leaderboard');
@@ -52,7 +59,10 @@ export const onRequestPost: PagesFunction<{ BATTLE_ARENA_KV: KVNamespace }> = as
       }
     });
   } catch (e) {
-    return new Response(String(e), { status: 500 });
+    return new Response('Internal Server Error', {
+      status: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' }
+    });
   }
 };
 

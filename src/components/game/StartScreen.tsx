@@ -40,7 +40,9 @@ function registerActivePlayer(): void {
       active.push({ id: sessionId!, ts: Date.now() });
     }
     localStorage.setItem(PLAYERS_KEY, JSON.stringify(active));
-  } catch {}
+  } catch {
+    // Ignore storage errors (e.g., private mode/quota); UI falls back to defaults.
+  }
 }
 
 function getActivePlayerCount(): number {

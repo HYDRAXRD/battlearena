@@ -15,7 +15,7 @@ const StarryBackground: React.FC = () => {
     })), []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ background: '#0a0a1a' }}>
+    <div className="fixed inset-0 z-0 overflow-hidden" style={{ background: '#0a0a1a' }}>
       {stars.map(s => (
         <motion.div key={s.id} className="absolute rounded-full bg-white"
           style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size }}

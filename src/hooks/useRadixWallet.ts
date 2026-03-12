@@ -20,6 +20,16 @@ export interface RadixWalletState {
   tokenBalance: number;
 }
 
+interface GatewayFungibleResource {
+  resource_address: string;
+  amount: string;
+}
+
+interface GatewayAccountItem {
+  address: string;
+  fungible_resources?: { items: GatewayFungibleResource[] };
+}
+
 let rdtInstance: ReturnType<typeof RadixDappToolkit> | null = null;
 const HYDR_TOKEN = 'resource_tdx_2_1t5372e5thltf7d8qx7xckn50h2ayu0lwd5qe24f96d22rfp2ckpxqh';
 
@@ -67,11 +77,11 @@ export const useRadixWallet = () => {
       if (!response.ok) return 0;
       
       const data = await response.json();
-      const accountData = data.items?.find((item: any) => item.address === address);
+      const accountData = data.items?.find((item: GatewayAccountItem) => item.address === address);
       
       // No Babylon Gateway, os recursos fungíveis ficam em fungible_resources.items
       const fungibleResources = accountData?.fungible_resources?.items || [];
-      const hydrResource = fungibleResources.find((r: any) => r.resource_address === HYDR_TOKEN);
+      const hydrResource = fungibleResources.find((r: GatewayFungibleResource) => r.resource_address === HYDR_TOKEN);
       
       // O valor vem como string "amount"
       return hydrResource ? parseFloat(hydrResource.amount) : 0;
@@ -113,13 +123,18 @@ export const useRadixWallet = () => {
     return () => {
       try {
         subscription?.unsubscribe();
-      } catch (_) {}
+      } catch (_) {
+        // Intentionally ignored - unsubscribe errors are non-recoverable at teardown
+      }
     };
   }, [fetchBalance]);
 
   const connect = useCallback(async () => {
     const rdt = getRdt();
     if (!rdt) return;
+    // Connection UI is handled by <radix-connect-button> web component.
+    // This provides a programmatic trigger if needed.
+    rdt.walletApi?.sendRequest();
   }, []);
 
   const disconnect = useCallback(async () => {

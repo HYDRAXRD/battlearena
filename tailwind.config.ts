@@ -62,6 +62,8 @@ export default {
           purple: '#1d6fe8',
           teal: '#14b8a6',
           cyan: '#06d6a0',
+          red: '#ef4444',
+          blue: '#3b82f6',
         },
       },
       fontFamily: {

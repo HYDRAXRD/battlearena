@@ -10,7 +10,7 @@ import BattleArena from '@/components/game/BattleArena';
 import Shop from '@/components/game/Shop';
 import Leaderboard from '@/components/game/Leaderboard';
 import RadixConnectButton from '@/components/game/RadixConnectButton';
-import { useGameAudio } from '@/hooks/useGameAudio';
+import { useGameAudioContext } from '@/hooks/useGameAudio';
 import { useRadixWallet } from '@/hooks/useRadixWallet';
 import hydrToken from '@/assets/hydr-token.png';
 
@@ -35,7 +35,7 @@ const Index = () => {
   const [hasName, setHasName] = useState(false);
   const [battleShopOpen, setBattleShopOpen] = useState(false);
   const [isAdvancingBattle, setIsAdvancingBattle] = useState(false);
-  const { muted, toggleMute, playMode, stopAll, playSfx } = useGameAudio();
+  const { muted, toggleMute, playMode, stopAll, playSfx } = useGameAudioContext();
 
   const [lastWonBattle, setLastWonBattle] = useState(0);
   const currentEnemy = ENEMIES[Math.min(state.currentBattle, ENEMIES.length - 1)];
@@ -81,9 +81,8 @@ const Index = () => {
   const handleWinBattle = useCallback((t: number, s: number) => {
     setBattleShopOpen(false);
     setLastWonBattle(state.currentBattle);
-    playSfx('win');
     winBattle(t, s);
-  }, [state.currentBattle, playSfx, winBattle]);
+  }, [state.currentBattle, winBattle]);
 
   const handleLose = useCallback(() => {
     playSfx('lose');
@@ -126,8 +125,9 @@ const Index = () => {
             Bucket("bucket1");
         `;
         const result = await sendTransaction(manifest, `Buy: ${qty}x ${item.name} (${totalCost} HYDR)`);
-        if (result && result.isErr && result.isErr()) {
-          console.error('Transaction failed:', result.error);
+        if (result && 'isErr' in result && typeof result.isErr === 'function' && result.isErr()) {
+          const errResult = result as { error?: string };
+          console.error('Transaction failed:', errResult.error);
           return;
         }
         playSfx('buy');
@@ -153,7 +153,7 @@ const Index = () => {
         <RadixConnectButton />
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {!hasName && (
           <NameEntry key="name" onConfirm={handleNameConfirm} />
         )}
@@ -168,7 +168,14 @@ const Index = () => {
         )}
 
         {hasName && state.screen === 'battle' && (
-          <div key={`battle-${state.currentBattle}`} className="relative w-full min-h-screen">
+          <motion.div
+            key={`battle-${state.currentBattle}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="relative z-10 w-full min-h-screen"
+          >
             <button
               onClick={() => setBattleShopOpen(true)}
               className="fixed bottom-16 right-4 z-40 font-pixel text-[9px] px-3 py-2 rounded-full border-2 border-yellow-400/70 bg-black/70 text-yellow-400 hover:bg-yellow-400/20 transition-all shadow-lg"
@@ -179,9 +186,9 @@ const Index = () => {
               <div className="fixed inset-0 z-50 bg-black/80 overflow-y-auto">
                 <button
                   onClick={() => setBattleShopOpen(false)}
-                  className="fixed top-4 left-4 z-60 font-pixel text-[10px] text-game-teal hover:text-game-teal/80 bg-black/60 px-3 py-2 rounded border border-game-teal/40"
+                  className="fixed top-4 left-4 z-[60] font-pixel text-[10px] text-game-teal hover:text-game-teal/80 bg-black/60 px-3 py-2 rounded border border-game-teal/40"
                 >
-                  \u2190 BACK
+                  ← BACK
                 </button>
                 <Shop
                   tokens={state.tokens}
@@ -203,7 +210,7 @@ const Index = () => {
                 onLose={handleLose}
               />
             )}
-          </div>
+          </motion.div>
         )}
 
         {hasName && state.screen === 'victory' && (
@@ -212,9 +219,9 @@ const Index = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center min-h-screen px-4 gap-4"
+            className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 gap-4"
           >
-            <div className="text-5xl">\uD83C\uDFC6</div>
+            <div className="text-5xl">🏆</div>
             <div className="font-pixel text-[20px] text-game-teal">VICTORY!</div>
             <div className="font-pixel text-[12px] text-white/80">{victoryEnemy.name} Defeated!</div>
             <div className="font-pixel text-[11px] text-yellow-400 flex items-center gap-1">
@@ -245,9 +252,9 @@ const Index = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center min-h-screen px-4 gap-4"
+            className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 gap-4"
           >
-            <div className="text-5xl">\uD83D\uDC80</div>
+            <div className="text-5xl">💀</div>
             <div className="font-pixel text-[20px] text-red-400">DEFEATED!</div>
             <div className="font-pixel text-[10px] text-white/60 text-center">
               Your Hydra has fallen in battle...<br />The mempool can be cruel.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import hydrToken from '@/assets/hydr-token.png';
 
@@ -21,30 +21,86 @@ interface Props {
 
 const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onBack }) => {
   const trophies = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
-  const [scores, setScores] = useState<Score[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitted, setSubmitted] = useState(false);
-
-  // Salva o score do jogador ao montar
-  useEffect(() => {
-    if (playerName && totalScore > 0 && !submitted) {
-      setSubmitted(true);
-      fetch('/api/leaderboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: playerName, score: totalScore, tokens: totalTokens }),
-      }).catch(() => {});
+  const hasCompletedGame = Boolean(playerName && totalScore > 0);
+  const [scores, setScores] = useState<Score[]>(() => {
+    if (!hasCompletedGame) {
+      return [];
     }
-  }, [playerName, totalScore, totalTokens, submitted]);
+
+    return [{ name: playerName, score: totalScore, tokens: totalTokens }];
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const hasSubmittedRef = useRef(false);
+
+  // Salva o score do jogador quando houver jogo concluido
+  useEffect(() => {
+    if (!hasCompletedGame || hasSubmittedRef.current) {
+      return;
+    }
+
+    hasSubmittedRef.current = true;
+
+    fetch('/api/leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: playerName, score: totalScore, tokens: totalTokens }),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('Failed to save score');
+        }
+
+        const data = (await response.json()) as Score[];
+        if (Array.isArray(data)) {
+          setScores(data);
+        }
+      })
+      .catch(() => {
+        setError('Could not save your score. Showing available data.');
+      });
+  }, [hasCompletedGame, playerName, totalScore, totalTokens]);
 
   // Busca scores globais
   useEffect(() => {
+    let isMounted = true;
+
     setLoading(true);
+    setError(null);
+
     fetch('/api/leaderboard')
-      .then(r => r.json())
-      .then((data: Score[]) => setScores(Array.isArray(data) ? data : []))
-      .catch(() => setScores([]))
-      .finally(() => setLoading(false));
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load leaderboard');
+        }
+
+        return response.json() as Promise<Score[]>;
+      })
+      .then((data: Score[]) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (Array.isArray(data)) {
+          setScores(data);
+        }
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setError('Could not load global leaderboard. Showing available data.');
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -77,6 +133,10 @@ const Leaderboard: React.FC<Props> = ({ playerName, totalScore, totalTokens, onB
         )}
 
         {/* Scores globais */}
+        {error && (
+          <div className="text-center py-2 font-pixel text-[7px] text-red-300">{error}</div>
+        )}
+
         {loading ? (
           <div className="text-center py-8 font-pixel text-[8px] text-muted-foreground">Loading scores...</div>
         ) : scores.length === 0 ? (

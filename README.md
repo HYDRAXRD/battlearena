@@ -4,7 +4,7 @@ A turn-based battle game built on Radix DLT with wallet integration.
 
 ## Project info
 
-**URL**: https://hydra/battlearena.vercel.app
+**URL**: https://battlearena.pages.dev
 
 ## How can I edit this code?
 

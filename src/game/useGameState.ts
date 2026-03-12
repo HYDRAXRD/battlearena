@@ -133,6 +133,10 @@ function reducer(state: GameState, action: Action): GameState {
       if (actualQty <= 0) return state;
       const totalCost = item.cost * actualQty;
 
+      if (!action.isFree && state.tokens < totalCost) {
+        return state;
+      }
+
       const h: HydraStats = {
         ...state.hydra,
         headPower: [...state.hydra.headPower] as [number, number, number],

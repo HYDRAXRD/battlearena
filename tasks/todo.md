@@ -574,3 +574,40 @@ npm run build
 # Must pass:
 npm run test
 ```
+
+---
+
+## Active Task — 2026-03-08 — Auditoria por stack com subagentes
+
+- [x] Mapear tecnologias atuais e dividir por areas (frontend, UI, teste, backend cloud, web3, smart contract)
+- [x] Delegar 1 subagente `general-kimi` por area para checar conformidade com documentacao oficial via Context7
+- [x] Consolidar todos os relatorios em um unico arquivo em `tasks/`
+- [x] Rodar validacoes locais para evidencias objetivas (lint/test/build)
+- [x] Documentar review final com riscos residuais e recomendacoes priorizadas
+
+### Review
+
+- Relatorio consolidado criado em `tasks/context7-auditoria-por-area-2026-03-08.md`.
+- Foram delegados 6 subagentes `general-kimi` (1 por area), todos com orientacao para consulta no Context7.
+- Validacao local executada:
+  - `npm run test` -> passou (3 arquivos, 26 testes)
+  - `npm run build` -> passou
+  - `npm run lint` -> falhou (1 erro, 8 warnings), erro em `src/test/game-state.test.ts:79` (`prefer-const`).
+
+---
+
+## Active Task — 2026-03-08 — Hardening de stacking/z-index
+
+- [x] Revalidar via subagente ocorrencias similares de stacking context com `fixed inset-0`
+- [x] Corrigir classe Tailwind invalida `z-60` no botao BACK do battle shop
+- [x] Fixar camada do background com `z-0` no `StarryBackground`
+- [x] Padronizar container da battle screen com `relative z-10`
+- [x] Executar validacao objetiva (`npm run lint` e `npm run build`)
+
+### Review
+
+- Foram aplicadas 3 correções pontuais: `src/pages/Index.tsx` (2 ajustes) e `src/components/game/StarryBackground.tsx` (1 ajuste).
+- `npm run build` passou.
+- `npm run lint` manteve 2 erros preexistentes e nao relacionados ao ajuste de stacking:
+  - `src/test/game-state.test.ts:79` (`prefer-const`)
+  - `tailwind.config.ts:101` (`@typescript-eslint/no-require-imports`)

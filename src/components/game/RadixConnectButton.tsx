@@ -55,7 +55,6 @@ const RadixConnectButton: React.FC<RadixConnectButtonProps> = ({
   return (
     <div className={`flex items-center ${className}`}>
       {/* The radix-connect-button is a custom web component provided by @radixdlt/radix-dapp-toolkit */}
-      {/* @ts-ignore */}
       <radix-connect-button />
     </div>
   );
