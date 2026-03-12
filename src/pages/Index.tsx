@@ -29,7 +29,7 @@ const MuteButton = ({ muted, onToggle }: { muted: boolean; onToggle: () => void 
 
 const Index = () => {
   const { state, setScreen, startGame, winBattle, nextBattle, purchase, loseGame, resetGame } = useGameState();
-  const { connected, accounts, sendTransaction, tokenBalance } = useRadixWallet();
+  const { connected, accounts, tokenBalance } = useRadixWallet();
   const [shopReturn, setShopReturn] = useState<GameScreen>('start');
   const [playerName, setPlayerName] = useState('');
   const [hasName, setHasName] = useState(false);
@@ -101,51 +101,14 @@ const Index = () => {
     nextBattle();
   }, [isLastBattle, isAdvancingBattle, nextBattle, setScreen]);
 
-  // Mainnet addresses
-  const HYDR_TOKEN = 'resource_rdx1t4kc2yjdcqprwu70tahua3p8uwvjej9q3rktpxdr8p5pmcp4almd6r';
-  const SHOP_ACCOUNT = 'account_rdx129sv0vcuj4zvspeu8ql4z6wm6zp3xs86a46388aw64xevvfyhnsx4e';
-
-  const handlePurchase = async (id: string, qty: number = 1) => {
+   const handlePurchase = (id: string, qty: number = 1) => {
     const item = SHOP_ITEMS.find(i => i.id === id);
     if (!item) return;
-    const totalCost = item.cost * qty;
-
-    if (connected && accounts.length > 0) {
-      try {
-        const manifest = `CALL_METHOD
-  Address("${accounts[0].address}")
-  "withdraw"
-  Address("${HYDR_TOKEN}")
-  Decimal("${totalCost}")
-;
-TAKE_FROM_WORKTOP
-  Address("${HYDR_TOKEN}")
-  Decimal("${totalCost}")
-  Bucket("bucket1")
-;
-CALL_METHOD
-  Address("${SHOP_ACCOUNT}")
-  "deposit"
-  Bucket("bucket1")
-;`;
-
-        const result = await sendTransaction(manifest, `Buy: ${qty}x ${item.name} (${totalCost} HYDR)`);
-        if (result && 'isErr' in result && typeof result.isErr === 'function' && result.isErr()) {
-          const errResult = result as { error?: string };
-          console.error('Transaction failed:', errResult.error);
-          return;
-        }
-        playSfx('buy');
-        incrementTxCount(qty);
-        purchase(id, qty, true);
-      } catch (err) {
-        console.error('Purchase error:', err);
-      }
-    } else {
-      playSfx('buy');
-      incrementTxCount(qty);
-      purchase(id, qty);
-    }
+    // Transaction is handled by Shop.tsx handleBuy (mainnet).
+    // Here we only update game state.
+    playSfx('buy');
+    incrementTxCount(qty);
+    purchase(id, qty, connected && accounts.length > 0);
   };
 
   return (
