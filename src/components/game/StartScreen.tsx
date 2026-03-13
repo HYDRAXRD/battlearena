@@ -3,20 +3,14 @@ import { motion } from 'framer-motion';
 import hydraHeads from '@/assets/hydra-heads.png';
 
 // Keys for localStorage persistence
-const TX_COUNT_KEY = 'hydra_total_transactions';
 const PLAYERS_KEY = 'hydra_active_players';
 const SESSION_KEY = 'hydra_session_id';
 
-// Helper to get/set persistent counters
-function getTxCount(): number {
-  return parseInt(localStorage.getItem(TX_COUNT_KEY) || '0', 10);
-}
-
-function incrementTxCount(n: number = 1): number {
-  const current = getTxCount();
-  const updated = current + n;
-  localStorage.setItem(TX_COUNT_KEY, String(updated));
-  return updated;
+// Resolves the /api/stats URL respecting the /battlearena base path in production
+function getStatsApiUrl(): string {
+  if (typeof window === 'undefined') return '/api/stats';
+  const prefix = window.location.pathname.startsWith('/battlearena') ? '/battlearena' : '';
+  return `${prefix}/api/stats`;
 }
 
 // Active players: tracked by session IDs stored in localStorage as JSON array
@@ -69,14 +63,27 @@ const StartScreen: React.FC<Props> = ({ onStart, onShop, onLeaderboard }) => {
 
   useEffect(() => {
     registerActivePlayer();
-    setTxCount(getTxCount());
     setPlayerCount(getActivePlayerCount());
 
-    // Refresh every 30 seconds to update active players
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(getStatsApiUrl());
+        if (response.ok) {
+          const data = await response.json() as { total_transactions?: number };
+          setTxCount(data.total_transactions ?? 0);
+        }
+      } catch {
+        // Network error — keep showing 0
+      }
+    };
+
+    fetchStats();
+
+    // Refresh every 30 seconds
     const interval = setInterval(() => {
       registerActivePlayer();
-      setTxCount(getTxCount());
       setPlayerCount(getActivePlayerCount());
+      fetchStats();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -182,6 +189,4 @@ const StartScreen: React.FC<Props> = ({ onStart, onShop, onLeaderboard }) => {
   );
 };
 
-// Export helper so Index.tsx can increment tx count when purchase completes
-export { incrementTxCount };
 export default StartScreen;

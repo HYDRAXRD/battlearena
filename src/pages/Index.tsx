@@ -5,7 +5,7 @@ import { ENEMIES, SHOP_ITEMS } from '@/game/constants';
 import { GameScreen } from '@/game/types';
 import StarryBackground from '@/components/game/StarryBackground';
 import NameEntry from '@/components/game/NameEntry';
-import StartScreen, { incrementTxCount } from '@/components/game/StartScreen';
+import StartScreen from '@/components/game/StartScreen';
 import BattleArena from '@/components/game/BattleArena';
 import Shop from '@/components/game/Shop';
 import Leaderboard from '@/components/game/Leaderboard';
@@ -107,7 +107,6 @@ const Index = () => {
     // Transaction is handled by Shop.tsx handleBuy (mainnet).
     // Here we only update game state.
     playSfx('buy');
-    incrementTxCount(qty);
     purchase(id, qty, connected && accounts.length > 0);
   };
 
